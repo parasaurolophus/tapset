@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="us.rader.tapset"
+    android:installLocation="auto"
+    android:versionCode="4"
+    android:versionName="0.4" >
+
+    <uses-sdk
+        android:minSdkVersion="11"
+        android:targetSdkVersion="17" />
+
+    <uses-permission android:name="android.permission.NFC" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
+        <activity
+            android:name="us.rader.tapset.SettingsItemListActivity"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                
+                <action android:name="android.nfc.action.NDEF_DISCOVERED" /><category android:name="android.intent.category.DEFAULT" /><category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="www.rader.us"
+                    android:scheme="http" android:pathPrefix="/tapset"/>
+                
+                
+                
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="us.rader.tapset.SettingsItemDetailActivity"
+            android:label="@string/title_settingsitem_detail"
+            android:parentActivityName=".SettingsItemListActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".SettingsItemListActivity" />
+        </activity>
+        <activity
+            android:name="us.rader.tapset.WriteTagActivity"
+            android:label="@string/title_activity_write_tag"
+            android:parentActivityName="us.rader.tapset.SettingsItemListActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="us.rader.tapset.SettingsItemListActivity" />
+        </activity>
+        <activity
+            android:name="us.rader.tapset.ShowQrCodeActivity"
+            android:label="@string/title_activity_qr_code"
+            android:parentActivityName="us.rader.tapset.SettingsItemListActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="us.rader.tapset.SettingsItemListActivity" />
+        </activity>
+
+        <provider
+            android:name="us.rader.provider.file.FileProvider"
+            android:authorities="@string/provider_authority_file"
+            android:exported="true"
+            android:grantUriPermissions="true"
+            android:icon="@drawable/ic_launcher" >
+        </provider>
+    </application>
+
+</manifest>

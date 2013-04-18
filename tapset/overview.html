@@ -1,0 +1,74 @@
+<html>
+
+<head>
+<title>tapset</title>
+</head>
+
+<body>
+
+	<h1>tapset</h1>
+
+	<p>Simple, no-frills app for storing and restoring combinations of
+		device settings (audio volume, ring tones etc.) using NFC tags or QR
+		codes.</p>
+
+	<h2>Requirements</h2>
+
+	<ol>
+
+		<li>Simple device settings UI</li>
+
+		<li>Write user-selectable combinations of device settings to NFC
+			tags</li>
+
+		<li>Share user-selectable combinations of device settings as QR
+			codes</li>
+
+		<li>Launch the app when a NFC tag containing device settings is
+			tapped and restore the settings it contains</li>
+
+		<li>Scan a QR code and restore the device settings it contains</li>
+
+	</ol>
+
+	<h2>Third-Party Dependencies</h2>
+
+	<dl>
+
+		<dt>
+			<a href="http://code.google.com/p/zxing/">zxing</a>
+		</dt>
+
+		<dd>Open source QR encoding and decoding library</dd>
+
+		<dt>zxingIntegration</dt>
+
+		<dd>
+			<a href="http://code.google.com/p/zxing/wiki/ScanningViaIntent">Example</a>
+			code from the
+			<code>zxing</code>
+			code> project that provides a convenience wrapper around their
+			app-specific intents
+		</dd>
+
+		<dt>
+			<a
+				href="https://play.google.com/store/apps/details?id=com.google.zxing.client.android">Barcode&nbsp;Scanner</a>
+		</dt>
+
+		<dd>
+			If the zxing <span style="font-style: italic;">Barcode&nbsp;Scanner</span>
+			app is installed, this app can invoke it to capture a QR code and
+			then will restore the device settings it contains. Note that creating
+			and sharing such QR codes is supported whether or not <span
+				style="font-style: italic;">Barcode&nbsp;Scanner</span> is
+			installed; the external app is only required to capture and act on
+			them. (<em>TO DO: add ability to capture QR codes directly to
+				the app, eliminating the reliance on a third-party app.</em>)
+		</dd>
+
+	</dl>
+
+</body>
+
+</html>

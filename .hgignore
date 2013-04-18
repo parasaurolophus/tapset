@@ -1,0 +1,9 @@
+syntax: glob
+
+.metadata/*
+.settings/*
+Servers/*
+bin/*
+gen/*
+doc/*
+*.class
