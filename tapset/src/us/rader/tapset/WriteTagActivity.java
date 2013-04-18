@@ -17,8 +17,6 @@
 
 package us.rader.tapset;
 
-import java.io.UnsupportedEncodingException;
-
 import us.rader.nfc.NdefWriterActivity;
 import us.rader.nfc.NfcReaderActivity;
 import android.app.Activity;
@@ -84,24 +82,10 @@ public final class WriteTagActivity extends NdefWriterActivity {
     @Override
     protected NdefMessage createNdefMessage() {
 
-        try {
-
-            Intent intent = getIntent();
-            Uri uri = intent.getData();
-            String string = uri.toString().substring(11);
-            byte[] temp = string.getBytes("US-ASCII"); //$NON-NLS-1$
-            byte[] payload = new byte[temp.length + 1];
-            payload[0] = 1;
-            System.arraycopy(temp, 0, payload, 1, temp.length);
-            NdefRecord record = new NdefRecord(NdefRecord.TNF_WELL_KNOWN,
-                    NdefRecord.RTD_URI, null, payload);
-            return new NdefMessage(new NdefRecord[] { record });
-
-        } catch (UnsupportedEncodingException e) {
-
-            throw new IllegalStateException(e);
-
-        }
+        Intent intent = getIntent();
+        Uri uri = intent.getData();
+        NdefRecord record = createUriRecord(uri);
+        return new NdefMessage(new NdefRecord[] { record });
 
     }
 

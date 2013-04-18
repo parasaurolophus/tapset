@@ -18,8 +18,10 @@
 package us.rader.nfc;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
-import android.annotation.TargetApi;
+import android.content.Intent;
+import android.net.Uri;
 import android.nfc.FormatException;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
@@ -27,17 +29,16 @@ import android.nfc.Tag;
 import android.nfc.tech.Ndef;
 import android.nfc.tech.NdefFormatable;
 import android.nfc.tech.TagTechnology;
-import android.os.Build;
 
 /**
  * Abstract super class of {@link NfcReaderActivity} objects that can write NDEF
  * messages to tags
  * 
  * <p>
- * This is implemented by overriding the {@link #processTag(Tag)} method with
- * its own <code>final</code> to write a {@link NdefMessage} to the {@link Tag}.
- * That implementation of {@link #processTag(Tag)} relies on the
- * <code>abstract</code> {@link #createNdefMessage()} method.
+ * This is implemented by overriding the {@link #processTag(Intent, Tag)} method
+ * with its own <code>final</code> to write a {@link NdefMessage} to the
+ * {@link Tag}. That implementation of {@link #processTag(Intent, Tag)} relies
+ * on the <code>abstract</code> {@link #createNdefMessage()} method.
  * </p>
  * 
  * @author Kirk
@@ -56,7 +57,7 @@ public abstract class NdefWriterActivity extends NfcReaderActivity {
      * 
      * @see #isReadOnlyRequested()
      * @see #setReadOnlyRequested(boolean)
-     * @see #processTag(Tag)
+     * @see #processTag(Intent, Tag)
      * @see #writeNdef(Ndef, NdefMessage)
      * @see #writeNdefFormatable(NdefFormatable, NdefMessage)
      */
@@ -125,22 +126,62 @@ public abstract class NdefWriterActivity extends NfcReaderActivity {
     protected abstract NdefMessage createNdefMessage();
 
     /**
+     * Helper method for constructing NDEF 'U' records
+     * 
+     * @param uri
+     *            the {@link Uri}
+     * 
+     * @return the 'U' {@link NdefRecord}
+     */
+    protected final NdefRecord createUriRecord(Uri uri) {
+
+        try {
+
+            String string = uri.toString();
+
+            if (string.startsWith("http://www.")) { //$NON-NLS-1$
+
+                string = string.substring(11);
+                byte[] bytes = string.getBytes("US-ASCII"); //$NON-NLS-1$
+                byte[] payload = new byte[bytes.length + 1];
+                payload[0] = 1;
+                System.arraycopy(bytes, 0, payload, 1, bytes.length);
+                return new NdefRecord(NdefRecord.TNF_WELL_KNOWN,
+                        NdefRecord.RTD_URI, null, payload);
+
+            }
+
+            return new NdefRecord(NdefRecord.TNF_ABSOLUTE_URI,
+                    string.getBytes("US-ASCII"), null, null); //$NON-NLS-1$
+
+        } catch (UnsupportedEncodingException e) {
+
+            throw new IllegalArgumentException(e);
+
+        }
+    }
+
+    /**
      * Write the result of calling {@link #createNdefMessage()} to the given
      * {@link Tag}
      * 
-     * Note that this overload of {@link NfcReaderActivity#processTag(Tag)} is
-     * deliberately <code>final</code>. Override {@link #createNdefMessage()} to
-     * supply the payload to write to the {@link Tag}
+     * Note that this overload of
+     * {@link NfcReaderActivity#processTag(Intent, Tag)} is deliberately
+     * <code>final</code>. Override {@link #createNdefMessage()} to supply the
+     * payload to write to the {@link Tag}
+     * 
+     * @param intent
+     *            ignored
      * 
      * @param tag
      *            the {@link Tag} to which to write
      * 
-     * @see NfcReaderActivity#processTag(Tag)
+     * @see NfcReaderActivity#processTag(Intent, Tag)
      * @see #writeNdef(Ndef, NdefMessage)
      * @see #writeNdefFormatable(NdefFormatable, NdefMessage)
      */
     @Override
-    protected final String processTag(Tag tag) {
+    protected final String processTag(Intent intent, Tag tag) {
 
         try {
 
@@ -190,36 +231,6 @@ public abstract class NdefWriterActivity extends NfcReaderActivity {
             return message;
 
         }
-
-    }
-
-    /**
-     * Create a {@link NdefMessage} containing the given {@link NdefRecord}
-     * optionally followed by a AAR
-     * 
-     * @param primaryRecord
-     *            the {@link NdefRecord} to wrap in a {@link NdefMessage}
-     * 
-     * @param aarPackage
-     *            the AAR {@link Package} or <code>null</code> if no AAR is
-     *            desired
-     * 
-     * @return the {@link NdefMessage}
-     */
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    private NdefMessage createNdefMessage(NdefRecord primaryRecord,
-            Package aarPackage) {
-
-        if ((aarPackage == null)
-                || (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN)) {
-
-            return new NdefMessage(new NdefRecord[] { primaryRecord });
-
-        }
-
-        String packageName = aarPackage.getName();
-        NdefRecord aar = NdefRecord.createApplicationRecord(packageName);
-        return new NdefMessage(primaryRecord, aar);
 
     }
 
