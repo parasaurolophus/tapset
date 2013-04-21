@@ -22,6 +22,7 @@ import java.io.FileOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import us.rader.provider.file.FileProvider;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -284,12 +285,12 @@ public class ShowQrCodeActivity extends Activity {
             }
 
             String label = getString(R.string.share_label_text);
-            Uri uri = Uri.parse("content://" //$NON-NLS-1$
-                    + getString(R.string.provider_authority_file) + "/" //$NON-NLS-1$
-                    + file.getName());
+            Uri uri = FileProvider
+                    .getContentUri(getString(R.string.provider_authority_file),
+                            file.getName());
             Intent intent = new Intent(Intent.ACTION_SEND);
             intent.setData(uri);
-            intent.setType("image/png"); //$NON-NLS-1$
+            intent.setType(FileProvider.getMimeType(uri));
             intent.putExtra(Intent.EXTRA_STREAM, uri);
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             Intent chooser = Intent.createChooser(intent, label);

@@ -19,6 +19,8 @@ package us.rader.provider.file;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.HashMap;
+import java.util.Map;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
@@ -33,6 +35,74 @@ import android.os.ParcelFileDescriptor;
  * @author Kirk
  */
 public final class FileProvider extends ContentProvider {
+
+    /**
+     * Scheme for content a {@link Uri}
+     */
+    private static final String        CONTENT_SCHEME = "content://"; //$NON-NLS-1$
+
+    /**
+     * Mapping from file name extensions to MIME types for use by
+     * {@link #getType(Uri)}
+     */
+    private static Map<String, String> mimeTypes;
+    /**
+     * Separator for {@link Uri} path components
+     */
+    private static final String        PATH_SEPARATOR = "/";         //$NON-NLS-1$
+
+    static {
+
+        mimeTypes = new HashMap<String, String>();
+        mimeTypes.put(".png", //$NON-NLS-1$
+                "image/png"); //$NON-NLS-1$
+
+    }
+
+    /**
+     * Return the content {@link Uri} for the specified file
+     * 
+     * @param contentAuthority
+     *            authority field of the content {@link Uri}
+     * 
+     * @param fileName
+     *            the base file name
+     * 
+     * @return the content {@link Uri}
+     */
+    public static Uri getContentUri(String contentAuthority, String fileName) {
+
+        return Uri.parse(CONTENT_SCHEME + contentAuthority + PATH_SEPARATOR
+                + fileName);
+
+    }
+
+    /**
+     * Return the MIME type for the given content {@link Uri}
+     * 
+     * @param uri
+     *            the content {@link Uri}
+     * 
+     * @return the content's MIME type string
+     * 
+     * @see #getType(Uri)
+     */
+    public static String getMimeType(Uri uri) {
+
+        String name = uri.getPath();
+
+        for (String extension : mimeTypes.keySet()) {
+
+            if (name.endsWith(extension)) {
+
+                return mimeTypes.get(extension);
+
+            }
+        }
+
+        return "application/binary"; //$NON-NLS-1$
+
+    }
 
     /**
      * Throw {@link UnsupportedOperationException}
@@ -58,9 +128,7 @@ public final class FileProvider extends ContentProvider {
     }
 
     /**
-     * Return MIME type for the given content {@link Uri}
-     * 
-     * TODO: hardwired to return "image/png" for now
+     * Return the MIME type for the given content {@link Uri}
      * 
      * @param uri
      *            the content {@link Uri}
@@ -72,7 +140,7 @@ public final class FileProvider extends ContentProvider {
     @Override
     public String getType(Uri uri) {
 
-        return "image/png"; //$NON-NLS-1$
+        return getMimeType(uri);
 
     }
 
