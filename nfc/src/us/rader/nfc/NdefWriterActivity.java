@@ -41,6 +41,13 @@ import android.nfc.tech.TagTechnology;
  * on the <code>abstract</code> {@link #createNdefMessage()} method.
  * </p>
  * 
+ * <p>
+ * Note that the helper methods {@link #createTextRecord(String)} ,
+ * {@link #createUriRecord(Uri)} etc. exist here as an alternative to
+ * {@link NdefRecord#createUri(Uri)} and the like so as to provide backwards
+ * compatibility with the earliest possible versions of the Android OS.
+ * </p>
+ * 
  * @author Kirk
  * 
  */
@@ -119,11 +126,62 @@ public abstract class NdefWriterActivity extends NfcReaderActivity {
     }
 
     /**
+     * Helper method for constructing NDEF MIME records
+     * 
+     * @param type
+     *            the MIME type string
+     * 
+     * @param payload
+     *            the payload data
+     * 
+     * @return the {@link NdefRecord}
+     */
+    protected final NdefRecord createMimeRecord(String type, byte[] payload) {
+
+        try {
+
+            byte[] bytes = type.getBytes("UTF-8"); //$NON-NLS-1$
+            return new NdefRecord(NdefRecord.TNF_MIME_MEDIA, bytes, null,
+                    payload);
+
+        } catch (UnsupportedEncodingException e) {
+
+            throw new IllegalArgumentException(e);
+
+        }
+    }
+
+    /**
      * Return the {@link NdefMessage} to write to the {@link Tag}
      * 
      * @return the {@link NdefMessage}
      */
     protected abstract NdefMessage createNdefMessage();
+
+    /**
+     * Helper method for constructing NDEF 'T' records
+     * 
+     * @param text
+     *            the text
+     * 
+     * @return the {@link NdefRecord}
+     */
+    protected final NdefRecord createTextRecord(String text) {
+
+        try {
+
+            byte[] bytes = text.getBytes("UTF-8"); //$NON-NLS-1$
+            byte[] payload = new byte[bytes.length + 1];
+            System.arraycopy(bytes, 0, payload, 1, bytes.length);
+            return new NdefRecord(NdefRecord.TNF_WELL_KNOWN,
+                    NdefRecord.RTD_TEXT, null, payload);
+
+        } catch (UnsupportedEncodingException e) {
+
+            throw new IllegalArgumentException(e);
+
+        }
+    }
 
     /**
      * Helper method for constructing NDEF 'U' records
