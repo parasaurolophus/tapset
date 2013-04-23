@@ -17,9 +17,12 @@
 
 package us.rader.tapset;
 
+import us.rader.nfc.NfcReaderActivity;
 import us.rader.tapset.settingsitems.SettingsItem;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -49,6 +52,11 @@ import com.google.zxing.integration.android.IntentResult;
  */
 public class SettingsItemListActivity extends FragmentActivity implements
         SettingsItemListFragment.ItemSelectedListener {
+
+    /**
+     * Request code when invoking {@link WriteTagActivity}
+     */
+    private static final int REQUEST_CODE_WRITE_TAG = 1;
 
     /**
      * Initiate a request to scan a QR code on behalf of the given
@@ -94,18 +102,18 @@ public class SettingsItemListActivity extends FragmentActivity implements
      * Launch a {@link WriteTagActivity}
      * 
      * @param context
-     *            the {@link Context} on whose behalf to launch a
+     *            the {@link Activity} on whose behalf to launch a
      *            {@link WriteTagActivity}
      * 
      * @return <code>true</code>
      */
-    public static boolean writeTag(Context context) {
+    public static boolean writeTag(Activity context) {
 
         Intent intent = new Intent(
                 "us.rader.tapset.writetag", //$NON-NLS-1$
                 SettingsItem.createUri(context), context,
                 WriteTagActivity.class);
-        context.startActivity(intent);
+        context.startActivityForResult(intent, REQUEST_CODE_WRITE_TAG);
         return true;
 
     }
@@ -246,10 +254,29 @@ public class SettingsItemListActivity extends FragmentActivity implements
 
         try {
 
-            IntentResult intentResult = IntentIntegrator.parseActivityResult(
-                    requestCode, resultCode, resultIntent);
-            SettingsItem.updateAllSettings(this,
-                    Uri.parse(intentResult.getContents()));
+            switch (requestCode) {
+
+                case IntentIntegrator.REQUEST_CODE:
+
+                    IntentResult intentResult = IntentIntegrator
+                            .parseActivityResult(requestCode, resultCode,
+                                    resultIntent);
+                    SettingsItem.updateAllSettings(this,
+                            Uri.parse(intentResult.getContents()));
+                    break;
+
+                case REQUEST_CODE_WRITE_TAG:
+
+                    alert(resultIntent
+                            .getStringExtra(NfcReaderActivity.EXTRA_RESULT));
+                    break;
+
+                default:
+
+                    throw new IllegalArgumentException(
+                            getString(R.string.unrecognized_result_code));
+
+            }
 
         } catch (Exception e) {
 
@@ -299,6 +326,33 @@ public class SettingsItemListActivity extends FragmentActivity implements
 
             }
         }
+
+    }
+
+    /**
+     * Display the given string in an {@link AlertDialog}
+     * 
+     * @param message
+     *            The message to display
+     */
+    private void alert(String message) {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(message);
+
+        builder.setNeutralButton(android.R.string.ok,
+                new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        dialog.dismiss();
+
+                    }
+
+                });
+
+        builder.show();
 
     }
 

@@ -20,7 +20,6 @@ package us.rader.nfc;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.PendingIntent;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.nfc.NfcAdapter;
@@ -61,6 +60,13 @@ import android.widget.Toast;
 public abstract class NfcReaderActivity extends Activity {
 
     /**
+     * {@link Intent#getStringExtra(String)} key used to return result of
+     * invoking {@link #processTag(Intent, Tag)} to the {@link Activity} that
+     * started this one
+     */
+    public static final String EXTRA_RESULT = "result"; //$NON-NLS-1$
+
+    /**
      * Invoke {@link NfcReaderActivity#processTag(Intent, Tag)} asynchronously.
      * 
      * <p>
@@ -83,6 +89,12 @@ public abstract class NfcReaderActivity extends Activity {
         private Intent intent;
 
         /**
+         * The result code to pass back to the {@link Activity} that started
+         * this one
+         */
+        private int    resultCode;
+
+        /**
          * The {@link Tag} to process
          */
         private Tag    tag;
@@ -100,6 +112,7 @@ public abstract class NfcReaderActivity extends Activity {
 
             this.intent = intent;
             this.tag = tag;
+            resultCode = Activity.RESULT_OK;
 
         }
 
@@ -123,6 +136,7 @@ public abstract class NfcReaderActivity extends Activity {
 
                 Log.e(getClass().getName(), "ProcessTagTask.doInBackground()", //$NON-NLS-1$
                         e);
+                resultCode = Activity.RESULT_FIRST_USER;
                 return getString(R.string.error_processing_tag);
 
             }
@@ -135,23 +149,10 @@ public abstract class NfcReaderActivity extends Activity {
         @Override
         protected void onPostExecute(String result) {
 
-            AlertDialog.Builder builder = new AlertDialog.Builder(
-                    NfcReaderActivity.this);
-            builder.setMessage(result);
-
-            builder.setNeutralButton(android.R.string.ok,
-                    new DialogInterface.OnClickListener() {
-
-                        public void onClick(DialogInterface dialog, int which) {
-
-                            dialog.dismiss();
-                            finish();
-
-                        }
-
-                    });
-
-            builder.create().show();
+            Intent intent = new Intent();
+            intent.putExtra(EXTRA_RESULT, result);
+            setResult(resultCode, intent);
+            finish();
 
         }
 

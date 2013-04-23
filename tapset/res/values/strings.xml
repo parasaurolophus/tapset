@@ -34,5 +34,6 @@
     <string name="title_settingsitem_detail">SettingsItem Detail</string>
     <string name="write_tag">Write Tag</string>
     <string name="provider_authority_file">us.rader.tapset.provider.file</string>
+    <string name="unrecognized_result_code">Unrecognized result code from other activity</string>
 
 </resources>
