@@ -17,6 +17,7 @@
 
 package us.rader.tapset;
 
+import us.rader.nfc.NfcReaderActivity;
 import us.rader.tapset.settingsitems.SettingsItem;
 import android.app.ActionBar;
 import android.app.Activity;
@@ -28,6 +29,8 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NavUtils;
 import android.view.Menu;
 import android.view.MenuItem;
+
+import com.google.zxing.integration.android.IntentIntegrator;
 
 /**
  * An activity representing a single SettingsItem detail screen.
@@ -136,8 +139,26 @@ public class SettingsItemDetailActivity extends FragmentActivity {
     protected void onActivityResult(int requestCode, int resultCode,
             Intent resultIntent) {
 
-        SettingsItem.updateAllSettings(this, resultIntent.getData());
+        switch (requestCode) {
 
+            case SettingsItemListActivity.REQUEST_CODE_WRITE_TAG:
+
+                SettingsItemListActivity.alert(this, resultIntent
+                        .getStringExtra(NfcReaderActivity.EXTRA_RESULT));
+                break;
+
+            case IntentIntegrator.REQUEST_CODE:
+
+                SettingsItemListActivity.updateSettingsFromQr(this,
+                        requestCode, resultCode, resultIntent);
+                break;
+
+            default:
+
+                throw new IllegalStateException(
+                        getString(R.string.unrecognized_result_code));
+
+        }
     }
 
     /**

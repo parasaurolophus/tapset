@@ -56,7 +56,37 @@ public class SettingsItemListActivity extends FragmentActivity implements
     /**
      * Request code when invoking {@link WriteTagActivity}
      */
-    private static final int REQUEST_CODE_WRITE_TAG = 1;
+    public static final int REQUEST_CODE_WRITE_TAG = 1;
+
+    /**
+     * Display the given string in an {@link AlertDialog}
+     * 
+     * @param activity
+     *            The current {@link Activity}
+     * 
+     * @param message
+     *            The message to display
+     */
+    public static void alert(Activity activity, String message) {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        builder.setMessage(message);
+
+        builder.setNeutralButton(android.R.string.ok,
+                new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        dialog.dismiss();
+
+                    }
+
+                });
+
+        builder.show();
+
+    }
 
     /**
      * Initiate a request to scan a QR code on behalf of the given
@@ -95,6 +125,31 @@ public class SettingsItemListActivity extends FragmentActivity implements
                 ShowQrCodeActivity.class);
         context.startActivity(intent);
         return true;
+
+    }
+
+    /**
+     * Parse the QR code contents and update the device settings accordingly
+     * 
+     * @param activity
+     *            The current {@link Activity}
+     * 
+     * @param requestCode
+     *            The request code for which this is the response handler
+     * 
+     * @param resultCode
+     *            The result code
+     * 
+     * @param resultIntent
+     *            The result data
+     */
+    public static void updateSettingsFromQr(Activity activity, int requestCode,
+            int resultCode, Intent resultIntent) {
+
+        IntentResult intentResult = IntentIntegrator.parseActivityResult(
+                requestCode, resultCode, resultIntent);
+        SettingsItem.updateAllSettings(activity,
+                Uri.parse(intentResult.getContents()));
 
     }
 
@@ -258,17 +313,15 @@ public class SettingsItemListActivity extends FragmentActivity implements
 
                 case IntentIntegrator.REQUEST_CODE:
 
-                    IntentResult intentResult = IntentIntegrator
-                            .parseActivityResult(requestCode, resultCode,
-                                    resultIntent);
-                    SettingsItem.updateAllSettings(this,
-                            Uri.parse(intentResult.getContents()));
+                    updateSettingsFromQr(this, requestCode, resultCode,
+                            resultIntent);
                     break;
 
                 case REQUEST_CODE_WRITE_TAG:
 
-                    alert(resultIntent
-                            .getStringExtra(NfcReaderActivity.EXTRA_RESULT));
+                    alert(this,
+                            resultIntent
+                                    .getStringExtra(NfcReaderActivity.EXTRA_RESULT));
                     break;
 
                 default:
@@ -326,33 +379,6 @@ public class SettingsItemListActivity extends FragmentActivity implements
 
             }
         }
-
-    }
-
-    /**
-     * Display the given string in an {@link AlertDialog}
-     * 
-     * @param message
-     *            The message to display
-     */
-    private void alert(String message) {
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(message);
-
-        builder.setNeutralButton(android.R.string.ok,
-                new DialogInterface.OnClickListener() {
-
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-
-                        dialog.dismiss();
-
-                    }
-
-                });
-
-        builder.show();
 
     }
 
