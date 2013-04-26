@@ -17,28 +17,28 @@
 
 package us.rader.nfc;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
-import android.content.Intent;
 import android.net.Uri;
-import android.nfc.FormatException;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.Tag;
 import android.nfc.tech.Ndef;
 import android.nfc.tech.NdefFormatable;
 import android.nfc.tech.TagTechnology;
+import android.os.Parcelable;
+import android.util.Log;
 
 /**
  * Abstract super class of {@link NfcReaderActivity} objects that can write NDEF
  * messages to tags
  * 
  * <p>
- * This is implemented by overriding the {@link #processTag(Intent, Tag)} method
- * with its own <code>final</code> to write a {@link NdefMessage} to the
- * {@link Tag}. That implementation of {@link #processTag(Intent, Tag)} relies
- * on the <code>abstract</code> {@link #createNdefMessage()} method.
+ * This is implemented by overriding the
+ * {@link #processTag(Tag, ProcessTagTask)} method with its own
+ * <code>final</code> to write a {@link NdefMessage} to the {@link Tag}. That
+ * implementation of {@link #processTag(Tag, ProcessTagTask)} relies on the
+ * <code>abstract</code> {@link #createNdefMessage()} method.
  * </p>
  * 
  * <p>
@@ -64,9 +64,7 @@ public abstract class NdefWriterActivity extends NfcReaderActivity {
      * 
      * @see #isReadOnlyRequested()
      * @see #setReadOnlyRequested(boolean)
-     * @see #processTag(Intent, Tag)
-     * @see #writeNdef(Ndef, NdefMessage)
-     * @see #writeNdefFormatable(NdefFormatable, NdefMessage)
+     * @see #processTag(Tag, ProcessTagTask)
      */
     private boolean              readOnlyRequested;
 
@@ -224,195 +222,90 @@ public abstract class NdefWriterActivity extends NfcReaderActivity {
      * {@link Tag}
      * 
      * Note that this overload of
-     * {@link NfcReaderActivity#processTag(Intent, Tag)} is deliberately
+     * {@link NfcReaderActivity#processTag(Tag, ProcessTagTask)} is deliberately
      * <code>final</code>. Override {@link #createNdefMessage()} to supply the
      * payload to write to the {@link Tag}
-     * 
-     * @param intent
-     *            ignored
      * 
      * @param tag
      *            the {@link Tag} to which to write
      * 
-     * @see NfcReaderActivity#processTag(Intent, Tag)
-     * @see #writeNdef(Ndef, NdefMessage)
-     * @see #writeNdefFormatable(NdefFormatable, NdefMessage)
+     * @param task
+     *            the {@Link ProcessTagTask} executing this method
+     * 
+     * @see NfcReaderActivity#processTag(Tag, ProcessTagTask)
      */
     @Override
-    protected final String processTag(Intent intent, Tag tag) {
+    protected final Parcelable processTag(Tag tag, ProcessTagTask task) {
 
         try {
 
-            NdefMessage ndefMessage = createNdefMessage();
+            TagTechnology technology = Ndef.get(tag);
 
-            if (ndefMessage == null) {
+            if (technology == null) {
 
-                return getString(R.string.no_ndef_message);
+                technology = NdefFormatable.get(tag);
 
             }
 
-            Ndef ndef = Ndef.get(tag);
+            if (technology == null) {
 
-            if (ndef == null) {
+                task.onProgressUpdate(getString(R.string.not_ndef_formatable));
+                return null;
 
-                NdefFormatable ndefFormatable = NdefFormatable.get(tag);
+            }
 
-                if (ndefFormatable == null) {
+            technology.connect();
 
-                    return getString(R.string.not_ndef_formatable);
+            try {
+
+                NdefMessage ndefMessage = createNdefMessage();
+
+                if (ndefMessage == null) {
+
+                    task.onProgressUpdate(getString(R.string.no_ndef_message));
+                    return null;
 
                 }
 
-                return writeNdefFormatable(ndefFormatable, ndefMessage);
-            }
+                if (technology instanceof Ndef) {
 
-            return writeNdef(ndef, ndefMessage);
+                    Ndef ndef = (Ndef) technology;
+                    ndef.writeNdefMessage(ndefMessage);
+
+                    if (readOnlyRequested) {
+
+                        ndef.makeReadOnly();
+
+                    }
+
+                } else {
+
+                    NdefFormatable formatable = (NdefFormatable) technology;
+
+                    if (readOnlyRequested) {
+
+                        formatable.formatReadOnly(ndefMessage);
+
+                    } else {
+
+                        formatable.format(ndefMessage);
+
+                    }
+                }
+
+                return ndefMessage;
+
+            } finally {
+
+                technology.close();
+            }
 
         } catch (Exception e) {
 
-            Throwable cause = e;
-
-            while (cause.getCause() != null) {
-
-                cause = cause.getCause();
-
-            }
-
-            String message = cause.getMessage();
-
-            if ((message == null) || "".equals(message)) { //$NON-NLS-1$
-
-                message = "unknown error writing tag"; //$NON-NLS-1$
-
-            }
-
-            return message;
+            Log.e(NdefWriterActivity.class.getName(), "processTag", e); //$NON-NLS-1$
+            return null;
 
         }
 
-    }
-
-    /**
-     * Write the given {@link NdefMessage} to the given {@link Ndef}
-     * pre-formatted or non-empty tag
-     * 
-     * While it would be nice to have a single method for writing to any
-     * {@link TagTechnology} instance, that is not practical given Android's
-     * rather ill-thought-out NFC API.
-     * 
-     * @param ndef
-     *            the {@link Ndef} tag
-     * 
-     * @param ndefMessage
-     *            the {@link NdefMessage}
-     * 
-     * @return the message to display to the user as feedback on the result of
-     * 
-     *         this attempt to write to a tag
-     * 
-     * @throws IOException
-     *             thrown if an I/O error is signaled by the NFC API
-     * 
-     * @throws FormatException
-     *             thrown if a format error is signaled by the NFC API
-     * 
-     * @see #writeNdefFormatable(NdefFormatable, NdefMessage)
-     */
-    private String writeNdef(Ndef ndef, NdefMessage ndefMessage)
-            throws IOException, FormatException {
-
-        if (!ndef.isWritable()) {
-
-            return getString(R.string.not_writable);
-
-        }
-
-        byte[] bytes = ndefMessage.toByteArray();
-        int length = bytes.length;
-        int maxLength = ndef.getMaxSize();
-
-        if (length > maxLength) {
-
-            return getString(R.string.insufficient_space, maxLength, length);
-
-        }
-
-        ndef.connect();
-
-        try {
-
-            ndef.writeNdefMessage(ndefMessage);
-
-            if (readOnlyRequested) {
-
-                if (!ndef.canMakeReadOnly()) {
-
-                    return getString(R.string.read_only_not_supported);
-
-                }
-
-                ndef.makeReadOnly();
-
-            }
-
-            return getString(R.string.success_writing_tag, maxLength, length);
-
-        } finally {
-
-            ndef.close();
-
-        }
-    }
-
-    /**
-     * Write the given {@link NdefMessage} to the given {@link NdefFormatable}
-     * tag
-     * 
-     * While it would be nice to have a single method for writing to any
-     * {@link TagTechnology} instance, that is not practical given Android's
-     * rather ill-thought-out NFC API.
-     * 
-     * @param ndefFormatable
-     *            the {@link NdefFormatable} tag
-     * 
-     * @param ndefMessage
-     *            the {@link NdefMessage}
-     * 
-     * @return the message to display to the user as feedback on the result of
-     *         this attempt to write to a tag
-     * 
-     * @throws IOException
-     *             thrown if an I/O error is signaled by the NFC API
-     * 
-     * @throws FormatException
-     *             thrown if a format error is signaled by the NFC API
-     * 
-     * @see #writeNdef(Ndef, NdefMessage)
-     */
-    private String writeNdefFormatable(NdefFormatable ndefFormatable,
-            NdefMessage ndefMessage) throws IOException, FormatException {
-
-        ndefFormatable.connect();
-
-        try {
-
-            if (readOnlyRequested) {
-
-                ndefFormatable.formatReadOnly(ndefMessage);
-
-            } else {
-
-                ndefFormatable.format(ndefMessage);
-
-            }
-
-            return getString(R.string.success_formatting_tag,
-                    ndefMessage.toByteArray().length);
-
-        } finally {
-
-            ndefFormatable.close();
-
-        }
     }
 }

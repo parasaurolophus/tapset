@@ -17,7 +17,7 @@
 
 package us.rader.tapset;
 
-import us.rader.nfc.NfcReaderActivity;
+import us.rader.nfc.NdefWriterActivity;
 import us.rader.tapset.settingsitems.SettingsItem;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -25,6 +25,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
+import android.nfc.NdefMessage;
+import android.nfc.Tag;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.view.Menu;
@@ -85,6 +87,39 @@ public class SettingsItemListActivity extends FragmentActivity implements
                 });
 
         builder.show();
+
+    }
+
+    /**
+     * Handle the response from a request to write to a {@link Tag}
+     * 
+     * @param activity
+     *            the {@link Activity} that received the result
+     * 
+     * @param resultIntent
+     *            the result {@link Intent} passed by the
+     *            {@link WriteTagActivity} using
+     *            {@link Activity#setResult(int, Intent)}
+     */
+    public static void handleWriteTagResult(Activity activity,
+            Intent resultIntent) {
+
+        NdefMessage message = resultIntent
+                .getParcelableExtra(NdefWriterActivity.EXTRA_RESULT);
+
+        if (message == null) {
+
+            Toast.makeText(activity, R.string.error_processing_tag,
+                    Toast.LENGTH_LONG).show();
+
+        } else {
+
+            byte[] bytes = message.toByteArray();
+            String text = activity.getString(R.string.success_writing_tag,
+                    bytes.length);
+            Toast.makeText(activity, text, Toast.LENGTH_LONG).show();
+
+        }
 
     }
 
@@ -319,9 +354,7 @@ public class SettingsItemListActivity extends FragmentActivity implements
 
                 case REQUEST_CODE_WRITE_TAG:
 
-                    alert(this,
-                            resultIntent
-                                    .getStringExtra(NfcReaderActivity.EXTRA_RESULT));
+                    handleWriteTagResult(this, resultIntent);
                     break;
 
                 default:

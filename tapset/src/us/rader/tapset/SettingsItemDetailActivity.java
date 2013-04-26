@@ -17,7 +17,6 @@
 
 package us.rader.tapset;
 
-import us.rader.nfc.NfcReaderActivity;
 import us.rader.tapset.settingsitems.SettingsItem;
 import android.app.ActionBar;
 import android.app.Activity;
@@ -143,8 +142,8 @@ public class SettingsItemDetailActivity extends FragmentActivity {
 
             case SettingsItemListActivity.REQUEST_CODE_WRITE_TAG:
 
-                SettingsItemListActivity.alert(this, resultIntent
-                        .getStringExtra(NfcReaderActivity.EXTRA_RESULT));
+                SettingsItemListActivity.handleWriteTagResult(this,
+                        resultIntent);
                 break;
 
             case IntentIntegrator.REQUEST_CODE:

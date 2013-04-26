@@ -26,23 +26,13 @@ import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.Log;
 import android.widget.Toast;
 
 /**
  * Abstract super class of {@link Activity} objects that wait for a NFC
  * {@link Tag} to be scanned and process it in some way
- * 
- * <p>
- * Note that a number of {@link Activity} methods are overridden here and marked
- * <code>final</code>. This is to ensure that the tightly coupled behavior of
- * these methods isn't subverted lower in the inheritance tree. Where
- * appropriate, <code>abstract</code> methods are declared to allow the child
- * class to take actions at the same stage of the {@link Activity} life cycle.
- * For example, {@link #onCreate(Bundle)} calls {@link #initialize(Bundle)} and
- * {@link #onNewIntent(Intent)} (indirectly) calls
- * {@link #processTag(Intent, Tag)}.
- * </p>
  * 
  * <p>
  * This class demonstrates the use of the {@link NfcAdapter} foreground dispatch
@@ -60,14 +50,8 @@ import android.widget.Toast;
 public abstract class NfcReaderActivity extends Activity {
 
     /**
-     * {@link Intent#getStringExtra(String)} key used to return result of
-     * invoking {@link #processTag(Intent, Tag)} to the {@link Activity} that
-     * started this one
-     */
-    public static final String EXTRA_RESULT = "result"; //$NON-NLS-1$
-
-    /**
-     * Invoke {@link NfcReaderActivity#processTag(Intent, Tag)} asynchronously.
+     * Invoke {@link NfcReaderActivity#processTag(Tag, ProcessTagTask)}
+     * asynchronously.
      * 
      * <p>
      * Much of the Android NFC API must be called in worker threads separate
@@ -75,69 +59,43 @@ public abstract class NfcReaderActivity extends Activity {
      * {@link Tag} handling code in such a worker thread.
      * </p>
      * 
-     * @see NfcReaderActivity#processTag(Intent, Tag)
+     * @see NfcReaderActivity#processTag(Tag, ProcessTagTask)
      * 
      * @author Kirk
      * 
      */
-    private class ProcessTagTask extends AsyncTask<Void, String, String> {
-
-        /**
-         * The {@link Intent} passed to
-         * {@link NfcReaderActivity#onNewIntent(Intent)}
-         */
-        private Intent intent;
+    protected class ProcessTagTask extends AsyncTask<Tag, String, Parcelable> {
 
         /**
          * The result code to pass back to the {@link Activity} that started
          * this one
          */
-        private int    resultCode;
+        private int resultCode;
 
         /**
-         * The {@link Tag} to process
-         */
-        private Tag    tag;
-
-        /**
-         * Initialize {@link #intent} and {@link #tag}
+         * Invoke {@link NfcReaderActivity#processTag(Tag, ProcessTagTask)} in
+         * the worker thread
          * 
-         * @param intent
-         *            the {@link Intent}
+         * @param tags
+         *            pass <code>tags[0]</code> to
+         *            {@link NfcReaderActivity#processTag(Tag, ProcessTagTask)}
          * 
-         * @param tag
-         *            the {@link Tag}
-         */
-        public ProcessTagTask(Intent intent, Tag tag) {
-
-            this.intent = intent;
-            this.tag = tag;
-            resultCode = Activity.RESULT_OK;
-
-        }
-
-        /**
-         * Invoke {@link NfcReaderActivity#processTag(Intent, Tag)} in the
-         * worker thread
-         * 
-         * @param ignored
-         *            parameters are ignored
-         * 
-         * @see NfcReaderActivity#processTag(Intent, Tag)
+         * @see NfcReaderActivity#processTag(Tag, ProcessTagTask)
          */
         @Override
-        protected String doInBackground(Void... ignored) {
+        protected Parcelable doInBackground(Tag... tags) {
 
             try {
 
-                return processTag(intent, tag);
+                resultCode = RESULT_OK;
+                return processTag(tags[0], this);
 
             } catch (Exception e) {
 
                 Log.e(getClass().getName(), "ProcessTagTask.doInBackground()", //$NON-NLS-1$
                         e);
-                resultCode = Activity.RESULT_FIRST_USER;
-                return getString(R.string.error_processing_tag);
+                resultCode = RESULT_FIRST_USER;
+                return null;
 
             }
         }
@@ -147,11 +105,21 @@ public abstract class NfcReaderActivity extends Activity {
          * {@link AlertDialog} and then exit this {@link NfcReaderActivity}
          */
         @Override
-        protected void onPostExecute(String result) {
+        protected void onPostExecute(Parcelable result) {
 
             Intent intent = new Intent();
-            intent.putExtra(EXTRA_RESULT, result);
-            setResult(resultCode, intent);
+
+            if (result == null) {
+
+                setResult(resultCode);
+
+            } else {
+
+                intent.putExtra(EXTRA_RESULT, result);
+                setResult(resultCode, intent);
+
+            }
+
             finish();
 
         }
@@ -170,6 +138,13 @@ public abstract class NfcReaderActivity extends Activity {
     }
 
     /**
+     * {@link Intent#getStringExtra(String)} key used to return result of
+     * invoking {@link #processTag(Tag, ProcessTagTask)} to the {@link Activity}
+     * that started this one
+     */
+    public static final String EXTRA_RESULT = "result"; //$NON-NLS-1$
+
+    /**
      * Cached {@link NfcAdapter} for use by {@link #onResume()} and
      * {@link #onPause()}
      * 
@@ -178,7 +153,7 @@ public abstract class NfcReaderActivity extends Activity {
      * @see #onPause()
      * @see #onNewIntent(Intent)
      */
-    private NfcAdapter     nfcAdapter;
+    private NfcAdapter         nfcAdapter;
 
     /**
      * Cached {@link NfcAdapter} for use by {@link #onResume()}
@@ -188,7 +163,7 @@ public abstract class NfcReaderActivity extends Activity {
      * @see #onPause()
      * @see #onNewIntent(Intent)
      */
-    private PendingIntent  pendingIntent;
+    private PendingIntent      pendingIntent;
 
     /**
      * Cached {@link NfcAdapter} for use by {@link #onResume()}
@@ -198,7 +173,7 @@ public abstract class NfcReaderActivity extends Activity {
      * @see #onPause()
      * @see #onNewIntent(Intent)
      */
-    private IntentFilter[] pendingIntentFilters;
+    private IntentFilter[]     pendingIntentFilters;
 
     /**
      * Return the {@link Intent} to wrap in a {@link PendingIntent} for use with
@@ -217,40 +192,15 @@ public abstract class NfcReaderActivity extends Activity {
     }
 
     /**
-     * Called by {@link #onCreate(Bundle)}
-     * 
-     * Put any code you would ordinarily put in {@link #onCreate(Bundle)} here.
-     * <code>super.onCreate(Bundle)</code> will have already been called.
-     * 
-     * @param savedInstanceState
-     *            the {@link Bundle} that was passed to
-     *            {@link #onCreate(Bundle)}
-     */
-    protected abstract void initialize(Bundle savedInstanceState);
-
-    /**
      * Prepare this instance to be displayed
      * 
-     * <p>
-     * This override of {@link Activity#onCreate(Bundle)} is deliberately
-     * <code>final</code>. Put any code you would ordinarily put in your own
-     * override of {@link Activity#onCreate(Bundle)} in
-     * {@link #initialize(Bundle)}, instead.
-     * </p>
      * 
-     * <p>
-     * This is done to ensure that the tightly coupled behavior of this method
-     * the other overridden {@link Activity} methods won't be accidentally
-     * subverted by derived classes.
-     * </p>
-     * 
-     * @see #initialize(Bundle)
      * @see #onResume()
      * @see #onPause()
      * @see #onNewIntent(Intent)
      */
     @Override
-    protected final void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
@@ -264,16 +214,6 @@ public abstract class NfcReaderActivity extends Activity {
                 NfcAdapter.ACTION_TAG_DISCOVERED);
         pendingIntentFilters = new IntentFilter[] { ndefDiscoveredFilter,
                 tagDiscoveredFilter };
-
-        try {
-
-            initialize(savedInstanceState);
-
-        } catch (Exception e) {
-
-            Log.e(getClass().getName(), "onCreate(Bundle)", e); //$NON-NLS-1$
-
-        }
 
     }
 
@@ -291,26 +231,8 @@ public abstract class NfcReaderActivity extends Activity {
 
         super.onNewIntent(intent);
         Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-        ProcessTagTask processTagTask = new ProcessTagTask(intent, tag);
-        processTagTask.execute();
-
-    }
-
-    /**
-     * Called by {@link #onPause()}
-     */
-    protected void paused() {
-
-        // nothing to do in the base class
-
-    }
-
-    /**
-     * Called by {@link #onResume()}
-     */
-    protected void resumed() {
-
-        // nothing to do in the base class
+        ProcessTagTask processTagTask = new ProcessTagTask();
+        processTagTask.execute(tag);
 
     }
 
@@ -328,15 +250,6 @@ public abstract class NfcReaderActivity extends Activity {
         super.onPause();
         nfcAdapter.disableForegroundDispatch(this);
 
-        try {
-
-            paused();
-
-        } catch (Exception e) {
-
-            Log.e(getClass().getName(), "onPause()", e); //$NON-NLS-1$
-
-        }
     }
 
     /**
@@ -353,15 +266,6 @@ public abstract class NfcReaderActivity extends Activity {
         nfcAdapter.enableForegroundDispatch(this, pendingIntent,
                 pendingIntentFilters, null);
 
-        try {
-
-            resumed();
-
-        } catch (Exception e) {
-
-            Log.e(getClass().getName(), "onPause()", e); //$NON-NLS-1$
-
-        }
     }
 
     /**
@@ -371,15 +275,14 @@ public abstract class NfcReaderActivity extends Activity {
      * thread, a fact that can be relied on and must be taken account of by
      * derived classes' implementations of this <code>abstract</code> method.
      * 
-     * @param intent
-     *            the {@link Intent} passed to {@link #onNewIntent(Intent)}
-     * 
      * @param tag
      *            the {@link Tag}
      * 
-     * @return a message to display to the user before exiting this
-     *         {@link NfcReaderActivity}
+     * @param task
+     *            the {@link ProcessTagTask} invoking this method
+     * 
+     * @return the result of processing the {@link Tag}
      */
-    protected abstract String processTag(Intent intent, Tag tag);
+    protected abstract Parcelable processTag(Tag tag, ProcessTagTask task);
 
 }

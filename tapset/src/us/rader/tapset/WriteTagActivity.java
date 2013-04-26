@@ -94,12 +94,11 @@ public final class WriteTagActivity extends NdefWriterActivity {
      * 
      * @param savedInstanceState
      *            persisted app state or <code>null</code>
-     * 
-     * @see NfcReaderActivity#initialize(Bundle)
      */
     @Override
-    protected void initialize(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
 
+        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_write_tag);
         // Show the Up button in the action bar.
         setupActionBar();
