@@ -1,10 +1,5 @@
 <resources>
 
-    <string name="insufficient_space">Maximum message size is %1$d but given message is %2$d bytes</string>
-    <string name="no_ndef_message">No NDEF message to write</string>
-    <string name="not_ndef_formatable">The tag can\'t be formatted</string>
-    <string name="not_writable">The tag is marked read only</string>
-    <string name="read_only_not_supported">NDEF message written, but the tag couldn\'t be made read-only</string>
     <string name="success_writing_tag">Successfully wrote %1$d bytes to the tag</string>
     <string name="error_processing_tag">Error processing tag</string>
 

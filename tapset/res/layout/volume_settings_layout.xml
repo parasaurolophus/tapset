@@ -7,17 +7,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
 
-        <Space
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
         <CheckBox
             android:id="@+id/include_output"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_weight="2"
             android:checked="true"
             android:text="@string/include_output_label_text" />
-
     </TableRow>
 
     <TableRow
@@ -55,7 +51,6 @@
                 android:layout_height="wrap_content"
                 android:text="@string/ringer_mode_silent_label" />
         </RadioGroup>
-
     </TableRow>
 
     <TableRow

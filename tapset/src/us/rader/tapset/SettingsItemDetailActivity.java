@@ -18,11 +18,14 @@
 package us.rader.tapset;
 
 import us.rader.tapset.settingsitems.SettingsItem;
+import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NavUtils;
@@ -177,9 +180,7 @@ public class SettingsItemDetailActivity extends FragmentActivity {
                 SettingsItemDetailFragment.ARG_ITEM_ID);
         SettingsItem<?> settingsItem = SettingsItem.getSettingsItem(id);
         setTitle(settingsItem.getLabel());
-        // Show the Up button in the action bar.
-        ActionBar actionBar = getActionBar();
-        actionBar.setDisplayHomeAsUpEnabled(true);
+        setupActionBar();
 
         // savedInstanceState is non-null when there is fragment state
         // saved from previous configurations of this activity
@@ -203,5 +204,20 @@ public class SettingsItemDetailActivity extends FragmentActivity {
 
         }
 
+    }
+
+    /**
+     * Work around bugs in backward-compatibility library
+     */
+    @SuppressLint("NewApi")
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public void setupActionBar() {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            // Show the Up button in the action bar.
+            ActionBar actionBar = getActionBar();
+            actionBar.setDisplayHomeAsUpEnabled(true);
+
+        }
     }
 }

@@ -23,12 +23,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 import us.rader.provider.file.FileProvider;
+import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.view.Menu;
@@ -253,10 +256,15 @@ public class ShowQrCodeActivity extends Activity {
     /**
      * Set up the {@link android.app.ActionBar}.
      */
+    @SuppressLint("NewApi")
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     private void setupActionBar() {
 
-        getActionBar().setDisplayHomeAsUpEnabled(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 
+            getActionBar().setDisplayHomeAsUpEnabled(true);
+
+        }
     }
 
     /**

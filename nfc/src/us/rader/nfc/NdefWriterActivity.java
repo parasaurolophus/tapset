@@ -59,6 +59,119 @@ public abstract class NdefWriterActivity extends NfcReaderActivity {
     private static final boolean DEFAULT_READ_ONLY_REQUESTED = false;
 
     /**
+     * Helper method for constructing NDEF MIME records
+     * 
+     * @param type
+     *            the MIME type string
+     * 
+     * @param payload
+     *            the payload data
+     * 
+     * @return the {@link NdefRecord}
+     */
+    public static NdefRecord createMimeRecord(String type, byte[] payload) {
+
+        try {
+
+            byte[] bytes = type.getBytes("UTF-8"); //$NON-NLS-1$
+            return new NdefRecord(NdefRecord.TNF_MIME_MEDIA, bytes, null,
+                    payload);
+
+        } catch (UnsupportedEncodingException e) {
+
+            throw new IllegalArgumentException(e);
+
+        }
+    }
+
+    /**
+     * Helper method for constructing NDEF 'T' records
+     * 
+     * @param text
+     *            the text
+     * 
+     * @return the {@link NdefRecord}
+     */
+    public static NdefRecord createTextRecord(String text) {
+
+        try {
+
+            byte[] payload = encodePayload((byte) 0, text, "UTF-8"); //$NON-NLS-1$
+            return new NdefRecord(NdefRecord.TNF_WELL_KNOWN,
+                    NdefRecord.RTD_TEXT, null, payload);
+
+        } catch (UnsupportedEncodingException e) {
+
+            throw new IllegalArgumentException(e);
+
+        }
+    }
+
+    /**
+     * Helper method for constructing NDEF 'U' records
+     * 
+     * @param uri
+     *            the {@link Uri}
+     * 
+     * @return the 'U' {@link NdefRecord}
+     */
+    public static NdefRecord createUriRecord(Uri uri) {
+
+        try {
+
+            String text = uri.toString();
+
+            if (text.startsWith("http://www.")) { //$NON-NLS-1$
+
+                text = text.substring(11);
+                byte[] payload = encodePayload((byte) 1, text, "US-ASCII"); //$NON-NLS-1$
+                return new NdefRecord(NdefRecord.TNF_WELL_KNOWN,
+                        NdefRecord.RTD_URI, null, payload);
+
+            }
+
+            return new NdefRecord(NdefRecord.TNF_ABSOLUTE_URI,
+                    text.getBytes("US-ASCII"), null, null); //$NON-NLS-1$
+
+        } catch (UnsupportedEncodingException e) {
+
+            throw new IllegalArgumentException(e);
+
+        }
+    }
+
+    /**
+     * Support the extremely bizarre format specified for NDEF 'U' and 'T'
+     * records
+     * 
+     * @param padByte
+     *            the value for the first byte in the returned array
+     * 
+     * @param text
+     *            the string whose encoded bytes begin at the second byte of the
+     *            returned array
+     * 
+     * @param encoding
+     *            the name of the character set to use when encoding the text
+     *            string
+     * 
+     * @return the encoded payload array
+     * 
+     * @throws UnsupportedEncodingException
+     *             if there is a bug in the VM
+     */
+    private static byte[] encodePayload(byte padByte, String text,
+            String encoding) throws UnsupportedEncodingException {
+
+        byte[] bytes = text.getBytes(encoding);
+        byte[] payload = new byte[bytes.length + 1];
+        payload[0] = padByte;
+        System.arraycopy(bytes, 0, payload, 1, bytes.length);
+        return payload;
+
+    }
+
+    /**
      * If <code>true</code>, mark tags read-only during formatting or after
      * writing. Leave tag writable otherwise.
      * 
@@ -66,7 +179,7 @@ public abstract class NdefWriterActivity extends NfcReaderActivity {
      * @see #setReadOnlyRequested(boolean)
      * @see #processTag(Tag, ProcessTagTask)
      */
-    private boolean              readOnlyRequested;
+    private boolean readOnlyRequested;
 
     /**
      * Initialize {@link #readOnlyRequested} to
@@ -124,98 +237,11 @@ public abstract class NdefWriterActivity extends NfcReaderActivity {
     }
 
     /**
-     * Helper method for constructing NDEF MIME records
-     * 
-     * @param type
-     *            the MIME type string
-     * 
-     * @param payload
-     *            the payload data
-     * 
-     * @return the {@link NdefRecord}
-     */
-    protected final NdefRecord createMimeRecord(String type, byte[] payload) {
-
-        try {
-
-            byte[] bytes = type.getBytes("UTF-8"); //$NON-NLS-1$
-            return new NdefRecord(NdefRecord.TNF_MIME_MEDIA, bytes, null,
-                    payload);
-
-        } catch (UnsupportedEncodingException e) {
-
-            throw new IllegalArgumentException(e);
-
-        }
-    }
-
-    /**
      * Return the {@link NdefMessage} to write to the {@link Tag}
      * 
      * @return the {@link NdefMessage}
      */
     protected abstract NdefMessage createNdefMessage();
-
-    /**
-     * Helper method for constructing NDEF 'T' records
-     * 
-     * @param text
-     *            the text
-     * 
-     * @return the {@link NdefRecord}
-     */
-    protected final NdefRecord createTextRecord(String text) {
-
-        try {
-
-            byte[] bytes = text.getBytes("UTF-8"); //$NON-NLS-1$
-            byte[] payload = new byte[bytes.length + 1];
-            System.arraycopy(bytes, 0, payload, 1, bytes.length);
-            return new NdefRecord(NdefRecord.TNF_WELL_KNOWN,
-                    NdefRecord.RTD_TEXT, null, payload);
-
-        } catch (UnsupportedEncodingException e) {
-
-            throw new IllegalArgumentException(e);
-
-        }
-    }
-
-    /**
-     * Helper method for constructing NDEF 'U' records
-     * 
-     * @param uri
-     *            the {@link Uri}
-     * 
-     * @return the 'U' {@link NdefRecord}
-     */
-    protected final NdefRecord createUriRecord(Uri uri) {
-
-        try {
-
-            String string = uri.toString();
-
-            if (string.startsWith("http://www.")) { //$NON-NLS-1$
-
-                string = string.substring(11);
-                byte[] bytes = string.getBytes("US-ASCII"); //$NON-NLS-1$
-                byte[] payload = new byte[bytes.length + 1];
-                payload[0] = 1;
-                System.arraycopy(bytes, 0, payload, 1, bytes.length);
-                return new NdefRecord(NdefRecord.TNF_WELL_KNOWN,
-                        NdefRecord.RTD_URI, null, payload);
-
-            }
-
-            return new NdefRecord(NdefRecord.TNF_ABSOLUTE_URI,
-                    string.getBytes("US-ASCII"), null, null); //$NON-NLS-1$
-
-        } catch (UnsupportedEncodingException e) {
-
-            throw new IllegalArgumentException(e);
-
-        }
-    }
 
     /**
      * Write the result of calling {@link #createNdefMessage()} to the given

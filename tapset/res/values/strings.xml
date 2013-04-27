@@ -2,23 +2,17 @@
 <resources>
     
     <string name="action_settings">Settings</string>
-    <string name="alarm_tone_label_text">Alarm</string>
     <string name="alarm_volume_label_text">Alarm</string>
     <string name="app_name">tapset</string>
     <string name="volume_settings_label">Volume</string>
-    <string name="cancel_button_text">Cancel</string>
     <string name="error_encoding_qr">Error encoding settings as QR code</string>
     <string name="include_alarm_label_text">Include alarm tone</string>
     <string name="include_notification_label_text">Include notification tone</string>
     <string name="include_output_label_text">Include in output</string>
     <string name="include_ringtone_label_text">Include ringer tone</string>
     <string name="media_volume_label_text">Media</string>
-    <string name="no_camera">No camera</string>
     <string name="no_uri_to_encode">No settings to encode as QR</string>
-    <string name="not_yet_implemented">Not yet implemented</string>
-    <string name="notification_tone_label_text">Notification</string>
     <string name="qr_code_label_text">QR code</string>
-    <string name="ring_tone_label_text">Ringer</string>
     <string name="ringer_mode_label_text">Mode</string>
     <string name="ringer_mode_normal_label">Normal</string>
     <string name="ringer_mode_silent_label">Silent</string>
@@ -29,7 +23,6 @@
     <string name="scan_qr_code_label_text">Scan QR</string>
     <string name="share_label_text">Share QR</string>
     <string name="title_activity_qr_code">QR code</string>
-    <string name="title_activity_scan_qr_code">Scan QR Code</string>
     <string name="title_activity_write_tag">WriteTagActivity</string>
     <string name="title_settingsitem_detail">SettingsItem Detail</string>
     <string name="write_tag">Write Tag</string>

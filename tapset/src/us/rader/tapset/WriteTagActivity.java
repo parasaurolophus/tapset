@@ -19,11 +19,14 @@ package us.rader.tapset;
 
 import us.rader.nfc.NdefWriterActivity;
 import us.rader.nfc.NfcReaderActivity;
+import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.view.MenuItem;
@@ -108,10 +111,15 @@ public final class WriteTagActivity extends NdefWriterActivity {
     /**
      * Set up the {@link android.app.ActionBar}.
      */
+    @SuppressLint("NewApi")
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     private void setupActionBar() {
 
-        getActionBar().setDisplayHomeAsUpEnabled(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 
+            getActionBar().setDisplayHomeAsUpEnabled(true);
+
+        }
     }
 
 }
