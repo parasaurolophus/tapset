@@ -2,5 +2,7 @@
 
     <string name="success_writing_tag">Successfully wrote %1$d bytes to the tag</string>
     <string name="error_processing_tag">Error processing tag</string>
+    <string name="no_ndef_message">No NDEF message to write</string>
+    <string name="not_ndef_formatable">The tag does not support NDEF format</string>
 
 </resources>
