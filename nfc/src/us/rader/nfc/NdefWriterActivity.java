@@ -121,7 +121,7 @@ public abstract class NdefWriterActivity extends NfcReaderActivity {
 
             String text = uri.toString();
 
-            if (text.startsWith("http://www.")) { //$NON-NLS-1$
+            if (text.startsWith(WELL_KNOWN_URI_PREFIX)) {
 
                 text = text.substring(11);
                 byte[] payload = encodePayload((byte) 1, text, "US-ASCII"); //$NON-NLS-1$
@@ -255,13 +255,10 @@ public abstract class NdefWriterActivity extends NfcReaderActivity {
      * @param tag
      *            the {@link Tag} to which to write
      * 
-     * @param task
-     *            the {@Link ProcessTagTask} executing this method
-     * 
      * @see NfcReaderActivity#processTag(Tag, ProcessTagTask)
      */
     @Override
-    protected final Parcelable processTag(Tag tag, ProcessTagTask task) {
+    protected final Parcelable processTag(Tag tag) {
 
         try {
 
@@ -275,7 +272,6 @@ public abstract class NdefWriterActivity extends NfcReaderActivity {
 
             if (technology == null) {
 
-                task.onProgressUpdate(getString(R.string.not_ndef_formatable));
                 return null;
 
             }
@@ -288,7 +284,6 @@ public abstract class NdefWriterActivity extends NfcReaderActivity {
 
                 if (ndefMessage == null) {
 
-                    task.onProgressUpdate(getString(R.string.no_ndef_message));
                     return null;
 
                 }
