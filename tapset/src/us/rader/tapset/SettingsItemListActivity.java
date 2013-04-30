@@ -70,7 +70,7 @@ public class SettingsItemListActivity extends FragmentActivity implements
     /**
      * Debug mode
      */
-    public static final boolean DEBUG                   = true;
+    public static final boolean DEBUG                   = false;
 
     /**
      * Request code when invoking {@link WriteTagActivity} in normal operating
