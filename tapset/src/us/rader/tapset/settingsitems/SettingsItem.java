@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import us.rader.tapset.R;
 import us.rader.tapset.SettingsItemDetailFragment;
 import us.rader.tapset.SettingsItemListFragment;
 import android.content.Context;
@@ -32,6 +33,7 @@ import android.os.Bundle;
 import android.text.Layout;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.Toast;
 
 /**
  * Base class of objects representing collections of device settings with their
@@ -171,6 +173,11 @@ public abstract class SettingsItem<T> {
             item.updateSettings(context, uri);
 
         }
+
+        Toast.makeText(context,
+                context.getString(R.string.settings_updated, uri.toString()),
+                Toast.LENGTH_SHORT).show();
+
     }
 
     /**
