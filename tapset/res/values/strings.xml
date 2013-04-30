@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+
     <string name="action_settings">Settings</string>
     <string name="alarm_volume_label_text">Alarm</string>
     <string name="app_name">tapset</string>
@@ -25,7 +25,7 @@
     <string name="title_activity_qr_code">QR code</string>
     <string name="title_activity_write_tag">WriteTagActivity</string>
     <string name="title_settingsitem_detail">SettingsItem Detail</string>
-    <string name="write_tag">Write Tag</string>
+    <string name="write_tag">Write tag&#8230;</string>
     <string name="provider_authority_file">us.rader.tapset.provider.file</string>
     <string name="unrecognized_result_code">Unrecognized result code from other activity</string>
     <string name="settings_updated">Settings updated from %1$s</string>

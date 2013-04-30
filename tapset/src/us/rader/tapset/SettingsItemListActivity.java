@@ -56,9 +56,33 @@ public class SettingsItemListActivity extends FragmentActivity implements
         SettingsItemListFragment.ItemSelectedListener {
 
     /**
-     * Request code when invoking {@link WriteTagActivity}
+     * {@link Intent} action used when invoking {@link WriteTagActivity} to
+     * perform a NFC reading unit test
      */
-    public static final int REQUEST_CODE_WRITE_TAG = 1;
+    public static final String  ACTION_READ_TEST        = "us.rader.tapset.test.read"; //$NON-NLS-1$
+
+    /**
+     * {@link Intent} action used when invoking {@link WriteTagActivity} to
+     * perform a NFC reading unit test
+     */
+    public static final String  ACTION_WRITE_TEST       = "us.rader.tapset.test.write"; //$NON-NLS-1$
+
+    /**
+     * Debug mode
+     */
+    public static final boolean DEBUG                   = true;
+
+    /**
+     * Request code when invoking {@link WriteTagActivity} in normal operating
+     * mode
+     */
+    public static final int     REQUEST_CODE_WRITE_TAG  = 1;
+
+    /**
+     * Request code when invoking {@link WriteTagActivity} in normal unit test
+     * mode
+     */
+    public static final int     REQUEST_CODE_WRITE_TEST = 2;
 
     /**
      * Display the given string in an {@link AlertDialog}
@@ -238,6 +262,7 @@ public class SettingsItemListActivity extends FragmentActivity implements
 
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main_options, menu);
+        addDebugItems(menu);
         return true;
 
     }
@@ -353,6 +378,7 @@ public class SettingsItemListActivity extends FragmentActivity implements
                     break;
 
                 case REQUEST_CODE_WRITE_TAG:
+                case REQUEST_CODE_WRITE_TEST:
 
                     handleWriteTagResult(this, resultIntent);
                     break;
@@ -412,6 +438,68 @@ public class SettingsItemListActivity extends FragmentActivity implements
 
             }
         }
+
+    }
+
+    /**
+     * Add debug / unit test menu items if {@link #DEBUG} is <code>true</code>
+     * 
+     * @param menu
+     *            the options {@link Menu}
+     */
+    private void addDebugItems(Menu menu) {
+
+        if (DEBUG) {
+
+            MenuItem item;
+            item = menu.add("Write test..."); //$NON-NLS-1$
+
+            item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+
+                    writeTest();
+                    return true;
+
+                }
+
+            });
+
+            item = menu.add("Read test..."); //$NON-NLS-1$
+
+            item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+
+                    readTest();
+                    return true;
+
+                }
+
+            });
+
+        }
+    }
+
+    /**
+     * Unit test for reading from a {@link Tag}
+     */
+    private void readTest() {
+
+        Toast.makeText(this, "not yet implemented", Toast.LENGTH_SHORT).show(); //$NON-NLS-1$
+
+    }
+
+    /**
+     * Unit test for writing to a {@link Tag}
+     */
+    private void writeTest() {
+
+        Intent intent = new Intent(ACTION_WRITE_TEST, null, this,
+                WriteTagActivity.class);
+        startActivityForResult(intent, REQUEST_CODE_WRITE_TEST);
 
     }
 

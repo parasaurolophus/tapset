@@ -40,6 +40,31 @@ import android.view.MenuItem;
 public final class WriteTagActivity extends NdefWriterActivity {
 
     /**
+     * Operational mode to support unit tests
+     * 
+     * @author Kirk
+     * 
+     */
+    private static enum Mode {
+
+        /**
+         * Normal app mode
+         */
+        NORMAL,
+
+        /**
+         * Perform NFC write unit tests
+         */
+        WRITE_TEST;
+
+    }
+
+    /**
+     * The current operating {@link Mode}
+     */
+    private Mode mode;
+
+    /**
      * Wizard-generated handler for an options {@link MenuItem}
      * 
      * @param item
@@ -85,11 +110,17 @@ public final class WriteTagActivity extends NdefWriterActivity {
     @Override
     protected NdefMessage createNdefMessage() {
 
-        Intent intent = getIntent();
-        Uri uri = intent.getData();
-        NdefRecord record = createUriRecord(uri);
-        return new NdefMessage(new NdefRecord[] { record });
+        switch (mode) {
 
+            case WRITE_TEST:
+
+                return createTestMessage();
+
+            default:
+
+                return createSettingsMessage();
+
+        }
     }
 
     /**
@@ -105,6 +136,55 @@ public final class WriteTagActivity extends NdefWriterActivity {
         setContentView(R.layout.activity_write_tag);
         // Show the Up button in the action bar.
         setupActionBar();
+        mode = Mode.NORMAL;
+
+        Intent intent = getIntent();
+
+        if (intent != null) {
+
+            String action = intent.getAction();
+
+            if (SettingsItemListActivity.ACTION_WRITE_TEST.equals(action)) {
+
+                writeTest();
+
+            }
+        }
+    }
+
+    /**
+     * Create a {@link NdefMessage} containing a {@link NdefRecord} representing
+     * the {@link Uri} that was passed in the {@link Intent} with which this
+     * activity was launched
+     * 
+     * @return the {@link NdefMessage}
+     */
+    private NdefMessage createSettingsMessage() {
+
+        Intent intent = getIntent();
+        Uri uri = intent.getData();
+        NdefRecord record = createUriRecord(uri);
+        return new NdefMessage(new NdefRecord[] { record });
+
+    }
+
+    /**
+     * Create a {@link NdefMessage} containing a collection of
+     * {@link NdefRecord} instances used in unit tests
+     * 
+     * @return the {@link NdefMessage}
+     */
+    private NdefMessage createTestMessage() {
+
+        NdefRecord uRecord = createUriRecord(Uri
+                .parse("http://www.rader.us/tapset")); //$NON-NLS-1$
+        NdefRecord aRecord = createUriRecord(Uri
+                .parse("tapset://www.rader.us/tapset")); //$NON-NLS-1$
+        NdefRecord tRecord = createTextRecord("test record"); //$NON-NLS-1$
+        NdefRecord mRecord = createMimeRecord("application/x-tapset", //$NON-NLS-1$
+                new byte[] { 0, 1, 2 });
+        return new NdefMessage(new NdefRecord[] { uRecord, aRecord, tRecord,
+                mRecord });
 
     }
 
@@ -120,6 +200,15 @@ public final class WriteTagActivity extends NdefWriterActivity {
             getActionBar().setDisplayHomeAsUpEnabled(true);
 
         }
+    }
+
+    /**
+     * NFC read unit test
+     */
+    private void writeTest() {
+
+        mode = Mode.WRITE_TEST;
+
     }
 
 }
