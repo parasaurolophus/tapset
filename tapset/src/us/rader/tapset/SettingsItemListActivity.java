@@ -17,6 +17,8 @@
 
 package us.rader.tapset;
 
+import java.util.Locale;
+
 import us.rader.nfc.NdefWriterActivity;
 import us.rader.tapset.settingsitems.SettingsItem;
 import android.app.Activity;
@@ -73,16 +75,20 @@ public class SettingsItemListActivity extends FragmentActivity implements
     public static final boolean DEBUG                   = false;
 
     /**
+     * Request code when invoking {@link ReadTestActivity} in unit test mode
+     */
+    public static final int     REQUEST_CODE_READ_TEST  = 1;
+
+    /**
      * Request code when invoking {@link WriteTagActivity} in normal operating
      * mode
      */
-    public static final int     REQUEST_CODE_WRITE_TAG  = 1;
+    public static final int     REQUEST_CODE_WRITE_TAG  = 2;
 
     /**
-     * Request code when invoking {@link WriteTagActivity} in normal unit test
-     * mode
+     * Request code when invoking {@link WriteTagActivity} in unit test mode
      */
-    public static final int     REQUEST_CODE_WRITE_TEST = 2;
+    public static final int     REQUEST_CODE_WRITE_TEST = 3;
 
     /**
      * Display the given string in an {@link AlertDialog}
@@ -112,6 +118,39 @@ public class SettingsItemListActivity extends FragmentActivity implements
 
         builder.show();
 
+    }
+
+    /**
+     * Handle the response from a request to read from a {@link Tag}
+     * 
+     * @param activity
+     *            the {@link Activity} that received the result
+     * 
+     * @param resultIntent
+     *            the result {@link Intent} passed by the
+     *            {@link ReadTestActivity} using
+     *            {@link Activity#setResult(int, Intent)}
+     */
+    public static void handleReadTagResult(Activity activity,
+            Intent resultIntent) {
+
+        NdefMessage message = resultIntent
+                .getParcelableExtra(NdefWriterActivity.EXTRA_RESULT);
+
+        if (message == null) {
+
+            Toast.makeText(activity, R.string.error_processing_tag,
+                    Toast.LENGTH_LONG).show();
+
+        } else {
+
+            byte[] bytes = message.toByteArray();
+            String text = String.format(Locale.getDefault(),
+                    "Successfully read %d bytes", //$NON-NLS-1$
+                    bytes.length);
+            Toast.makeText(activity, text, Toast.LENGTH_LONG).show();
+
+        }
     }
 
     /**
@@ -383,6 +422,11 @@ public class SettingsItemListActivity extends FragmentActivity implements
                     handleWriteTagResult(this, resultIntent);
                     break;
 
+                case REQUEST_CODE_READ_TEST:
+
+                    handleReadTagResult(this, resultIntent);
+                    break;
+
                 default:
 
                     throw new IllegalArgumentException(
@@ -488,7 +532,9 @@ public class SettingsItemListActivity extends FragmentActivity implements
      */
     private void readTest() {
 
-        Toast.makeText(this, "not yet implemented", Toast.LENGTH_SHORT).show(); //$NON-NLS-1$
+        Intent intent = new Intent(ACTION_READ_TEST, null, this,
+                ReadTestActivity.class);
+        startActivityForResult(intent, REQUEST_CODE_WRITE_TEST);
 
     }
 
