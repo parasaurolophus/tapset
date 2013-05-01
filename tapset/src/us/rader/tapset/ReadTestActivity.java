@@ -15,7 +15,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
 
 /**
  * {@link NfcReaderActivity} used for unit testing purposes, only
@@ -125,8 +124,6 @@ public class ReadTestActivity extends NfcReaderActivity {
 
             if (ndef == null) {
 
-                Toast.makeText(this,
-                        "NDEF technology expected", Toast.LENGTH_SHORT).show(); //$NON-NLS-1$
                 return null;
 
             }

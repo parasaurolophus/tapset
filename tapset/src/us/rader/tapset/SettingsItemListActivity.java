@@ -58,6 +58,11 @@ public class SettingsItemListActivity extends FragmentActivity implements
         SettingsItemListFragment.ItemSelectedListener {
 
     /**
+     * {@link Intent} action used when invoking {@link ShowQrCodeActivity}
+     */
+    private static final String ACTION_SHOW_QR          = "us.rader.tapset.showqr";    //$NON-NLS-1$
+
+    /**
      * {@link Intent} action used when invoking {@link WriteTagActivity} to
      * perform a NFC reading unit test
      */
@@ -217,8 +222,7 @@ public class SettingsItemListActivity extends FragmentActivity implements
      */
     public static boolean showQrCode(Context context) {
 
-        Intent intent = new Intent(
-                "us.rader.tapset.qrcode", //$NON-NLS-1$
+        Intent intent = new Intent(ACTION_SHOW_QR,
                 SettingsItem.createUri(context), context,
                 ShowQrCodeActivity.class);
         context.startActivity(intent);
