@@ -252,6 +252,7 @@ public abstract class NfcReaderActivity extends Activity {
      * @return the string that results from decoding the given payload array
      * 
      * @throws UnsupportedEncodingException
+     *             if there is a bug in the VM
      */
     private static String decodeWellKnown(byte[] type, byte[] payload)
             throws UnsupportedEncodingException {
