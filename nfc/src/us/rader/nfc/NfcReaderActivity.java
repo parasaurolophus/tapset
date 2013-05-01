@@ -24,9 +24,11 @@ import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
+import android.nfc.tech.TagTechnology;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -51,13 +53,6 @@ import android.widget.Toast;
  * @author Kirk
  */
 public abstract class NfcReaderActivity extends Activity {
-
-    /**
-     * Uri's that start with this string will be encoded using
-     * {@link NdefRecord#TNF_WELL_KNOWN} and {@link NdefRecord#RTD_URI} rather
-     * than {@link NdefRecord#TNF_ABSOLUTE_URI}
-     */
-    public static final String WELL_KNOWN_URI_PREFIX = "http://www."; //$NON-NLS-1$
 
     /**
      * Invoke {@link NfcReaderActivity#processTag(Tag)} asynchronously.
@@ -98,11 +93,16 @@ public abstract class NfcReaderActivity extends Activity {
                 resultCode = RESULT_OK;
                 return processTag(tags[0]);
 
+            } catch (ProcessTagException e) {
+
+                Log.e(getClass().getName(), "doInBackground", e); //$NON-NLS-1$
+                resultCode = e.getResultCode();
+                return null;
+
             } catch (Exception e) {
 
-                Log.e(getClass().getName(), "ProcessTagTask.doInBackground()", //$NON-NLS-1$
-                        e);
-                resultCode = RESULT_FIRST_USER;
+                Log.e(getClass().getName(), "doInBackground", e); //$NON-NLS-1$
+                resultCode = RESULT_TECHNOLOGY_ERROR;
                 return null;
 
             }
@@ -137,7 +137,37 @@ public abstract class NfcReaderActivity extends Activity {
      * invoking {@link #processTag(Tag)} to the {@link Activity} that started
      * this one
      */
-    public static final String EXTRA_RESULT = "us.rader.nfc.result"; //$NON-NLS-1$
+    public static final String EXTRA_RESULT            = "us.rader.nfc.result"; //$NON-NLS-1$
+
+    /**
+     * Result code indicating that there is no {@link NdefMessage} to process
+     */
+    public static final int    RESULT_NO_MESSAGE       = RESULT_FIRST_USER;
+
+    /**
+     * Result code indicating that the {@link Tag} passed to
+     * {@link #processTag(Tag)} was <code>null</code>
+     */
+    public static final int    RESULT_NO_TAG           = RESULT_FIRST_USER + 1;
+
+    /**
+     * Result code indicating that the {@link Tag} passed to
+     * {@link #processTag(Tag)} was <code>null</code>
+     */
+    public static final int    RESULT_NOT_FORMATABLE   = RESULT_FIRST_USER + 2;
+
+    /**
+     * Result code indicating that some method of some class that implements
+     * {@link TagTechnology} threw an exception
+     */
+    public static final int    RESULT_TECHNOLOGY_ERROR = RESULT_FIRST_USER + 3;
+
+    /**
+     * Uri's that start with this string will be encoded using
+     * {@link NdefRecord#TNF_WELL_KNOWN} and {@link NdefRecord#RTD_URI} rather
+     * than {@link NdefRecord#TNF_ABSOLUTE_URI}
+     */
+    public static final String WELL_KNOWN_URI_PREFIX   = "http://www.";        //$NON-NLS-1$
 
     /**
      * Decode the payload of the given {@link NdefRecord} according to the rules
@@ -446,7 +476,11 @@ public abstract class NfcReaderActivity extends Activity {
      *            the {@link Tag}
      * 
      * @return the result of processing the {@link Tag}
+     * 
+     * @throws ProcessTagException
+     *             if an error occurs while processing the {@link Tag}
      */
-    protected abstract Parcelable processTag(Tag tag);
+    protected abstract Parcelable processTag(Tag tag)
+            throws ProcessTagException;
 
 }

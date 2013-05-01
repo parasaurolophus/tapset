@@ -4,5 +4,6 @@
     <string name="error_processing_tag">Error processing tag</string>
     <string name="no_ndef_message">No NDEF message to write</string>
     <string name="not_ndef_formatable">The tag does not support NDEF format</string>
+    <string name="no_tag">No tag</string>
 
 </resources>

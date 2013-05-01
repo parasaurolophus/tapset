@@ -17,9 +17,11 @@
 
 package us.rader.nfc;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
 import android.net.Uri;
+import android.nfc.FormatException;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.Tag;
@@ -256,11 +258,20 @@ public abstract class NdefWriterActivity extends NfcReaderActivity {
      *            the {@link Tag} to which to write
      * 
      * @see NfcReaderActivity#processTag(Tag, ProcessTagTask)
+     * 
+     * @throws ProcessTagException
+     *             if an error occurs
      */
     @Override
-    protected final Parcelable processTag(Tag tag) {
+    protected final Parcelable processTag(Tag tag) throws ProcessTagException {
 
         try {
+
+            if (tag == null) {
+
+                throw new ProcessTagException(RESULT_NO_TAG,
+                        getString(R.string.no_tag));
+            }
 
             TagTechnology technology = Ndef.get(tag);
 
@@ -272,7 +283,8 @@ public abstract class NdefWriterActivity extends NfcReaderActivity {
 
             if (technology == null) {
 
-                return null;
+                throw new ProcessTagException(RESULT_NOT_FORMATABLE,
+                        getString(R.string.not_ndef_formatable));
 
             }
 
@@ -284,7 +296,8 @@ public abstract class NdefWriterActivity extends NfcReaderActivity {
 
                 if (ndefMessage == null) {
 
-                    return null;
+                    throw new ProcessTagException(RESULT_NO_MESSAGE,
+                            getString(R.string.no_ndef_message));
 
                 }
 
@@ -321,10 +334,15 @@ public abstract class NdefWriterActivity extends NfcReaderActivity {
                 technology.close();
             }
 
-        } catch (Exception e) {
+        } catch (FormatException e) {
 
             Log.e(NdefWriterActivity.class.getName(), "processTag", e); //$NON-NLS-1$
-            return null;
+            throw new ProcessTagException(RESULT_FIRST_USER, e);
+
+        } catch (IOException e) {
+
+            Log.e(NdefWriterActivity.class.getName(), "processTag", e); //$NON-NLS-1$
+            throw new ProcessTagException(RESULT_FIRST_USER, e);
 
         }
 
