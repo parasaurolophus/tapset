@@ -8,7 +8,6 @@ import android.nfc.Tag;
 import android.nfc.tech.Ndef;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.v4.app.NavUtils;
 import android.util.Log;
 import android.view.Menu;
@@ -22,14 +21,14 @@ import android.widget.ListView;
  * @author Kirk
  * 
  */
-public class ReadTestActivity extends NfcReaderActivity {
+public class ReadTestActivity extends NfcReaderActivity<NdefMessage> {
 
     /**
      * This of strings to display in the UI
      * 
      * This is initialized to an empty list in {@link #onCreate(Bundle)} and
      * updated in {@link #processTag(Tag)}. The list is actually displayed in
-     * {@link #onTagProcessed(int, Parcelable)}
+     * {@link #onTagProcessed(int, NdefMessage)}
      */
     private String[] items;
 
@@ -104,7 +103,7 @@ public class ReadTestActivity extends NfcReaderActivity {
      *      android.os.Parcelable)
      */
     @Override
-    protected void onTagProcessed(int resultCode, Parcelable result) {
+    protected void onTagProcessed(int resultCode, NdefMessage result) {
 
         ListView listView = (ListView) findViewById(R.id.listView1);
         listView.setAdapter(new ArrayAdapter<String>(this,
@@ -116,7 +115,7 @@ public class ReadTestActivity extends NfcReaderActivity {
      * Display the contents of the {@link Tag} to the user
      */
     @Override
-    protected Parcelable processTag(Tag tag) {
+    protected NdefMessage processTag(Tag tag) {
 
         try {
 

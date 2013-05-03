@@ -180,7 +180,7 @@ public final class WriteTagActivity extends NdefWriterActivity {
                 .parse("http://www.rader.us/tapset")); //$NON-NLS-1$
         NdefRecord aRecord = createUriRecord(Uri
                 .parse("tapset://www.rader.us/tapset")); //$NON-NLS-1$
-        NdefRecord tRecord = createTextRecord("test record"); //$NON-NLS-1$
+        NdefRecord tRecord = createTextRecord("test record", "en"); //$NON-NLS-1$ //$NON-NLS-2$
         NdefRecord mRecord = createMimeRecord("application/x-tapset", //$NON-NLS-1$
                 new byte[] { 0, 1, 2 });
         return new NdefMessage(new NdefRecord[] { uRecord, aRecord, tRecord,

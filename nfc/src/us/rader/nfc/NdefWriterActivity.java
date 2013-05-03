@@ -28,7 +28,6 @@ import android.nfc.Tag;
 import android.nfc.tech.Ndef;
 import android.nfc.tech.NdefFormatable;
 import android.nfc.tech.TagTechnology;
-import android.os.Parcelable;
 import android.util.Log;
 
 /**
@@ -44,7 +43,7 @@ import android.util.Log;
  * </p>
  * 
  * <p>
- * Note that the helper methods {@link #createTextRecord(String)} ,
+ * Note that the helper methods {@link #createTextRecord(String, String)} ,
  * {@link #createUriRecord(Uri)} etc. exist here as an alternative to
  * {@link NdefRecord#createUri(Uri)} and the like so as to provide backwards
  * compatibility with the earliest possible versions of the Android OS.
@@ -53,7 +52,7 @@ import android.util.Log;
  * @author Kirk
  * 
  */
-public abstract class NdefWriterActivity extends NfcReaderActivity {
+public abstract class NdefWriterActivity extends NfcReaderActivity<NdefMessage> {
 
     /**
      * Default value for {@link #readOnlyRequested}
@@ -92,13 +91,31 @@ public abstract class NdefWriterActivity extends NfcReaderActivity {
      * @param text
      *            the text
      * 
+     * @param language
+     *            the language code (e.g. "en," "fr" etc.)
+     * 
      * @return the {@link NdefRecord}
      */
-    public static NdefRecord createTextRecord(String text) {
+    public static NdefRecord createTextRecord(String text, String language) {
 
         try {
 
-            byte[] payload = encodePayload((byte) 0, text, "UTF-8"); //$NON-NLS-1$
+            byte[] textBytes = text.getBytes("UTF-8"); //$NON-NLS-1$
+            byte[] languageBytes = language.getBytes("UTF-8"); //$NON-NLS-1$
+            int payloadLength = textBytes.length + languageBytes.length + 1;
+
+            if (payloadLength > 255) {
+
+                throw new IllegalArgumentException(
+                        "maximum record size exceeded"); //$NON-NLS-1$
+
+            }
+
+            byte[] payload = new byte[payloadLength];
+            payload[0] = (byte) languageBytes.length;
+            System.arraycopy(languageBytes, 0, payload, 1, languageBytes.length);
+            System.arraycopy(textBytes, 0, payload, languageBytes.length + 1,
+                    textBytes.length);
             return new NdefRecord(NdefRecord.TNF_WELL_KNOWN,
                     NdefRecord.RTD_TEXT, null, payload);
 
@@ -122,55 +139,43 @@ public abstract class NdefWriterActivity extends NfcReaderActivity {
         try {
 
             String text = uri.toString();
+            int index = 1;
+            String prefix = null;
 
-            if (text.startsWith(WELL_KNOWN_URI_PREFIX)) {
+            while (index < WELL_KNOWN_URI_PREFIXES.length) {
 
-                text = text.substring(11);
-                byte[] payload = encodePayload((byte) 1, text, "US-ASCII"); //$NON-NLS-1$
-                return new NdefRecord(NdefRecord.TNF_WELL_KNOWN,
-                        NdefRecord.RTD_URI, null, payload);
+                prefix = WELL_KNOWN_URI_PREFIXES[index];
+
+                if (text.startsWith(prefix)) {
+
+                    break;
+
+                }
+
+                index += 1;
 
             }
 
-            return new NdefRecord(NdefRecord.TNF_ABSOLUTE_URI,
-                    text.getBytes("US-ASCII"), null, null); //$NON-NLS-1$
+            if (index >= WELL_KNOWN_URI_PREFIXES.length) {
+
+                index = 0;
+                prefix = ""; //$NON-NLS-1$
+
+            }
+
+            text = text.substring(prefix.length());
+            byte[] bytes = text.getBytes("US-ASCII"); //$NON-NLS-1$
+            byte[] payload = new byte[bytes.length + 1];
+            payload[0] = (byte) index;
+            System.arraycopy(bytes, 0, payload, 1, bytes.length);
+            return new NdefRecord(NdefRecord.TNF_WELL_KNOWN,
+                    NdefRecord.RTD_URI, null, payload);
 
         } catch (UnsupportedEncodingException e) {
 
             throw new IllegalArgumentException(e);
 
         }
-    }
-
-    /**
-     * Support the extremely bizarre format specified for NDEF 'U' and 'T'
-     * records
-     * 
-     * @param padByte
-     *            the value for the first byte in the returned array
-     * 
-     * @param text
-     *            the string whose encoded bytes begin at the second byte of the
-     *            returned array
-     * 
-     * @param encoding
-     *            the name of the character set to use when encoding the text
-     *            string
-     * 
-     * @return the encoded payload array
-     * 
-     * @throws UnsupportedEncodingException
-     *             if there is a bug in the VM
-     */
-    private static byte[] encodePayload(byte padByte, String text,
-            String encoding) throws UnsupportedEncodingException {
-
-        byte[] bytes = text.getBytes(encoding);
-        byte[] payload = new byte[bytes.length + 1];
-        payload[0] = padByte;
-        System.arraycopy(bytes, 0, payload, 1, bytes.length);
-        return payload;
-
     }
 
     /**
@@ -263,7 +268,7 @@ public abstract class NdefWriterActivity extends NfcReaderActivity {
      *             if an error occurs
      */
     @Override
-    protected final Parcelable processTag(Tag tag) throws ProcessTagException {
+    protected final NdefMessage processTag(Tag tag) throws ProcessTagException {
 
         try {
 

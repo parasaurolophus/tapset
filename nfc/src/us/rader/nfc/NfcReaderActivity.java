@@ -45,6 +45,10 @@ import android.widget.Toast;
  * threads using classes derived from {@link AsyncTask}.
  * </p>
  * 
+ * @param <ResultType>
+ *            the type object returned by {@link #processTag(Tag)} and expected
+ *            by {@link #onTagProcessed(int, Parcelable)}
+ * 
  * @see #onCreate(Bundle)
  * @see #onResume()
  * @see #onPause()
@@ -52,7 +56,8 @@ import android.widget.Toast;
  * 
  * @author Kirk
  */
-public abstract class NfcReaderActivity extends Activity {
+public abstract class NfcReaderActivity<ResultType extends Parcelable> extends
+        Activity {
 
     /**
      * Invoke {@link NfcReaderActivity#processTag(Tag)} asynchronously.
@@ -68,7 +73,7 @@ public abstract class NfcReaderActivity extends Activity {
      * @author Kirk
      * 
      */
-    private class ProcessTagTask extends AsyncTask<Tag, String, Parcelable> {
+    private class ProcessTagTask extends AsyncTask<Tag, String, ResultType> {
 
         /**
          * The result code to pass back to the {@link Activity} that started
@@ -86,7 +91,7 @@ public abstract class NfcReaderActivity extends Activity {
          * @see NfcReaderActivity#processTag(Tag)
          */
         @Override
-        protected Parcelable doInBackground(Tag... tags) {
+        protected ResultType doInBackground(Tag... tags) {
 
             try {
 
@@ -113,7 +118,7 @@ public abstract class NfcReaderActivity extends Activity {
          * {@link AlertDialog} and then exit this {@link NfcReaderActivity}
          */
         @Override
-        protected void onPostExecute(Parcelable result) {
+        protected void onPostExecute(ResultType result) {
 
             onTagProcessed(resultCode, result);
 
@@ -132,42 +137,68 @@ public abstract class NfcReaderActivity extends Activity {
 
     }
 
+
+
+
+
+
+
+
     /**
      * {@link Intent#getStringExtra(String)} key used to return result of
      * invoking {@link #processTag(Tag)} to the {@link Activity} that started
      * this one
      */
-    public static final String EXTRA_RESULT            = "us.rader.nfc.result"; //$NON-NLS-1$
+    public static final String   EXTRA_RESULT            = "us.rader.nfc.result"; //$NON-NLS-1$
 
     /**
      * Result code indicating that there is no {@link NdefMessage} to process
      */
-    public static final int    RESULT_NO_MESSAGE       = RESULT_FIRST_USER;
+    public static final int      RESULT_NO_MESSAGE       = RESULT_FIRST_USER;
 
     /**
      * Result code indicating that the {@link Tag} passed to
      * {@link #processTag(Tag)} was <code>null</code>
      */
-    public static final int    RESULT_NO_TAG           = RESULT_FIRST_USER + 1;
+    public static final int      RESULT_NO_TAG           = RESULT_FIRST_USER + 1;
 
     /**
      * Result code indicating that the {@link Tag} passed to
      * {@link #processTag(Tag)} was <code>null</code>
      */
-    public static final int    RESULT_NOT_FORMATABLE   = RESULT_FIRST_USER + 2;
+    public static final int      RESULT_NOT_FORMATABLE   = RESULT_FIRST_USER + 2;
 
     /**
      * Result code indicating that some method of some class that implements
      * {@link TagTechnology} threw an exception
      */
-    public static final int    RESULT_TECHNOLOGY_ERROR = RESULT_FIRST_USER + 3;
+    public static final int      RESULT_TECHNOLOGY_ERROR = RESULT_FIRST_USER + 3;
 
     /**
-     * Uri's that start with this string will be encoded using
-     * {@link NdefRecord#TNF_WELL_KNOWN} and {@link NdefRecord#RTD_URI} rather
-     * than {@link NdefRecord#TNF_ABSOLUTE_URI}
+     * The special-case URI prefixes for 'U' NDEF records
      */
-    public static final String WELL_KNOWN_URI_PREFIX   = "http://www.";        //$NON-NLS-1$
+    protected static final String[] WELL_KNOWN_URI_PREFIXES = {
+
+    //@formatter:off
+
+        // not a recognized prefix, use code 0
+        "",             //$NON-NLS-1$
+
+        // well-known prefix code 1
+        "http://www.",  //$NON-NLS-1$
+
+        // well-known prefix code 2
+        "https://www.", //$NON-NLS-1$
+
+        // well-known prefix code 3
+        "http://",      //$NON-NLS-1$
+
+        // well-known prefix code 4
+        "https://"      //$NON-NLS-1$
+
+    };
+
+    //@formatter:on
 
     /**
      * Decode the payload of the given {@link NdefRecord} according to the rules
@@ -289,11 +320,13 @@ public abstract class NfcReaderActivity extends Activity {
 
         if (equals(type, NdefRecord.RTD_TEXT)) {
 
-            return new String(payload, 1, payload.length - 1, "UTF-8"); //$NON-NLS-1$
+            int index = payload[0] + 1;
+            int textLength = payload.length - index;
+            return new String(payload, index, textLength, "UTF-8"); //$NON-NLS-1$
 
         } else if (equals(type, NdefRecord.RTD_URI)) {
 
-            return WELL_KNOWN_URI_PREFIX
+            return WELL_KNOWN_URI_PREFIXES[payload[0]]
                     + new String(payload, 1, payload.length - 1, "US-ASCII"); //$NON-NLS-1$
 
         } else {
@@ -446,7 +479,7 @@ public abstract class NfcReaderActivity extends Activity {
      * @param result
      *            the value returned by {@link #processTag(Tag)}
      */
-    protected void onTagProcessed(int resultCode, Parcelable result) {
+    protected void onTagProcessed(int resultCode, ResultType result) {
 
         Intent intent = new Intent();
 
@@ -480,7 +513,7 @@ public abstract class NfcReaderActivity extends Activity {
      * @throws ProcessTagException
      *             if an error occurs while processing the {@link Tag}
      */
-    protected abstract Parcelable processTag(Tag tag)
+    protected abstract ResultType processTag(Tag tag)
             throws ProcessTagException;
 
 }
