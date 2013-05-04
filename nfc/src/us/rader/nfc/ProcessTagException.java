@@ -17,10 +17,12 @@
 
 package us.rader.nfc;
 
+import android.content.Intent;
+import android.nfc.Tag;
+
 /**
- * {@link Exception} thrown by
- * {@link NfcReaderActivity#processTag(android.nfc.Tag)} to signal an error and
- * set the response code
+ * {@link Exception} thrown by {@link NfcReaderActivity#processTag(Intent, Tag)}
+ * to signal an error and set the response code
  * 
  * @author Kirk
  * 
@@ -36,7 +38,7 @@ public class ProcessTagException extends Exception {
      * 
      * @see #getResultCode()
      */
-    private int resultCode;
+    private int               resultCode;
 
     /**
      * 

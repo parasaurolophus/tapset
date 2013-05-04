@@ -20,6 +20,8 @@ package us.rader.nfc;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.net.Uri;
 import android.nfc.FormatException;
 import android.nfc.NdefMessage;
@@ -37,16 +39,16 @@ import android.util.Log;
  * <p>
  * This is implemented by overriding the
  * {@link #processTag(Tag, ProcessTagTask)} method with its own
- * <code>final</code> to write a {@link NdefMessage} to the {@link Tag}. That
- * implementation of {@link #processTag(Tag, ProcessTagTask)} relies on the
- * <code>abstract</code> {@link #createNdefMessage()} method.
+ * <code>final</code> implementation that writes a {@link NdefMessage} to the
+ * {@link Tag}. That implementation of {@link #processTag(Tag, ProcessTagTask)}
+ * relies on the <code>abstract</code> {@link #createNdefMessage()} method.
  * </p>
  * 
  * <p>
  * Note that the helper methods {@link #createTextRecord(String, String)} ,
  * {@link #createUriRecord(Uri)} etc. exist here as an alternative to
  * {@link NdefRecord#createUri(Uri)} and the like so as to provide backwards
- * compatibility with the earliest possible versions of the Android OS.
+ * compatibility with the earliest practical versions of the Android OS.
  * </p>
  * 
  * @author Kirk
@@ -259,8 +261,13 @@ public abstract class NdefWriterActivity extends NfcReaderActivity<NdefMessage> 
      * <code>final</code>. Override {@link #createNdefMessage()} to supply the
      * payload to write to the {@link Tag}
      * 
+     * @param newIntent
+     *            the {@link Intent} passed to
+     *            {@link Activity#onNewIntent(Intent)}
+     * 
      * @param tag
-     *            the {@link Tag} to which to write
+     *            the {@link Tag} to which to write, extracted from
+     *            <code>newIntent</code> as a convenience
      * 
      * @see NfcReaderActivity#processTag(Tag, ProcessTagTask)
      * 
@@ -268,7 +275,8 @@ public abstract class NdefWriterActivity extends NfcReaderActivity<NdefMessage> 
      *             if an error occurs
      */
     @Override
-    protected final NdefMessage processTag(Tag tag) throws ProcessTagException {
+    protected final NdefMessage processTag(Intent newIntent, Tag tag)
+            throws ProcessTagException {
 
         try {
 
@@ -276,6 +284,7 @@ public abstract class NdefWriterActivity extends NfcReaderActivity<NdefMessage> 
 
                 throw new ProcessTagException(RESULT_NO_TAG,
                         getString(R.string.no_tag));
+
             }
 
             TagTechnology technology = Ndef.get(tag);

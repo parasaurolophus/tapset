@@ -33,21 +33,36 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.Log;
-import android.widget.Toast;
 
 /**
  * Abstract super class of {@link Activity} objects that wait for a NFC
  * {@link Tag} to be scanned and process it in some way
  * 
  * <p>
- * This class demonstrates the use of the {@link NfcAdapter} foreground dispatch
- * mechanism, as well as the standard pattern for handling events in worker
- * threads using classes derived from {@link AsyncTask}.
+ * Most apps that access read or write NFC tags must have at least one
+ * {@link Activity} that uses the {@link NfcAdapter} foreground dispatch
+ * mechanism. Doing so requires a good deal of boilerplate logic not only to
+ * properly inter-operate with the NF API at specific points in the
+ * {@link Activity} life-cycle, but also must take care to do so in a way that
+ * ensure that the correct operations are are carried out in the appropriate
+ * threads.
+ * </p>
+ * 
+ * <p>
+ * In addition, the NDEF records that are used by most applications require
+ * complex formatting and parsing logic that is not well supported in any but
+ * the very most recent versions of the Android SDK.
+ * </p>
+ * 
+ * <p>
+ * This class and {@link NdefWriterActivity} which extends it, provide the
+ * standard boilerplate code for any application that uses these Android
+ * features to read and write NFC tags, respectively.
  * </p>
  * 
  * @param <ResultType>
- *            the type object returned by {@link #processTag(Tag)} and expected
- *            by {@link #onTagProcessed(int, Parcelable)}
+ *            the type of object returned by {@link #processTag(Intent, Tag)}
+ *            and expected by {@link #onTagProcessed(int, Parcelable)}
  * 
  * @see #onCreate(Bundle)
  * @see #onResume()
@@ -60,7 +75,7 @@ public abstract class NfcReaderActivity<ResultType extends Parcelable> extends
         Activity {
 
     /**
-     * Invoke {@link NfcReaderActivity#processTag(Tag)} asynchronously.
+     * Invoke {@link NfcReaderActivity#processTag(Intent, Tag)} asynchronously.
      * 
      * Much of the Android NFC API must be called in worker threads separate
      * from the UI thread. Notifications of state changes, on the other hand,
@@ -68,12 +83,39 @@ public abstract class NfcReaderActivity<ResultType extends Parcelable> extends
      * {@link AsyncTask} to arrange to call the derived class's {@link Tag}
      * handling code in the correct threads
      * 
-     * @see NfcReaderActivity#processTag(Tag)
+     * @see NfcReaderActivity#processTag(Intent, Tag)
      * 
      * @author Kirk
      * 
      */
-    private class ProcessTagTask extends AsyncTask<Tag, String, ResultType> {
+    private class ProcessTagTask extends AsyncTask<Void, Void, ResultType> {
+
+        /**
+         * The {@link Intent} passed to
+         * {@link NfcReaderActivity#onNewIntent(Intent)}
+         */
+        private Intent newIntent;
+
+        /**
+         * The {@link Tag} extracted from {@link #newIntent} as a convenience
+         */
+        private Tag    tag;
+
+        /**
+         * Initialize {@link #newIntent} and {@link #tag}
+         * 
+         * @param newIntent
+         *            the {@link Intent}
+         * 
+         * @param tag
+         *            the {@link Tag}
+         */
+        public ProcessTagTask(Intent newIntent, Tag tag) {
+
+            this.newIntent = newIntent;
+            this.tag = tag;
+
+        }
 
         /**
          * The result code to pass back to the {@link Activity} that started
@@ -82,21 +124,22 @@ public abstract class NfcReaderActivity<ResultType extends Parcelable> extends
         private int resultCode;
 
         /**
-         * Invoke {@link NfcReaderActivity#processTag(Tag)} in the worker thread
+         * Invoke {@link NfcReaderActivity#processTag(Intent, Tag)} in the
+         * worker thread
          * 
-         * @param tags
-         *            pass <code>tags[0]</code> to
-         *            {@link NfcReaderActivity#processTag(Tag)}
+         * @param params
+         *            ignored, since the relevent values were passed to the
+         *            constructor
          * 
-         * @see NfcReaderActivity#processTag(Tag)
+         * @see NfcReaderActivity#processTag(Intent, Tag)
          */
         @Override
-        protected ResultType doInBackground(Tag... tags) {
+        protected ResultType doInBackground(Void... params) {
 
             try {
 
                 resultCode = RESULT_OK;
-                return processTag(tags[0]);
+                return processTag(newIntent, tag);
 
             } catch (ProcessTagException e) {
 
@@ -124,18 +167,29 @@ public abstract class NfcReaderActivity<ResultType extends Parcelable> extends
 
         }
 
-        /**
-         * Report the given status message to the user in a brief {@link Toast}
-         */
-        @Override
-        protected void onProgressUpdate(String... values) {
-
-            Toast.makeText(NfcReaderActivity.this, values[0],
-                    Toast.LENGTH_SHORT).show();
-
-        }
-
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -146,7 +200,7 @@ public abstract class NfcReaderActivity<ResultType extends Parcelable> extends
 
     /**
      * {@link Intent#getStringExtra(String)} key used to return result of
-     * invoking {@link #processTag(Tag)} to the {@link Activity} that started
+     * invoking {@link #processTag(Intent, Tag)} to the {@link Activity} that started
      * this one
      */
     public static final String   EXTRA_RESULT            = "us.rader.nfc.result"; //$NON-NLS-1$
@@ -158,13 +212,13 @@ public abstract class NfcReaderActivity<ResultType extends Parcelable> extends
 
     /**
      * Result code indicating that the {@link Tag} passed to
-     * {@link #processTag(Tag)} was <code>null</code>
+     * {@link #processTag(Intent, Tag)} was <code>null</code>
      */
     public static final int      RESULT_NO_TAG           = RESULT_FIRST_USER + 1;
 
     /**
      * Result code indicating that the {@link Tag} passed to
-     * {@link #processTag(Tag)} was <code>null</code>
+     * {@link #processTag(Intent, Tag)} was <code>null</code>
      */
     public static final int      RESULT_NOT_FORMATABLE   = RESULT_FIRST_USER + 2;
 
@@ -424,8 +478,8 @@ public abstract class NfcReaderActivity<ResultType extends Parcelable> extends
 
         super.onNewIntent(intent);
         Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-        ProcessTagTask processTagTask = new ProcessTagTask();
-        processTagTask.execute(tag);
+        ProcessTagTask processTagTask = new ProcessTagTask(intent, tag);
+        processTagTask.execute();
 
     }
 
@@ -466,18 +520,18 @@ public abstract class NfcReaderActivity<ResultType extends Parcelable> extends
      * 
      * This method is invoked by
      * {@link ProcessTagTask#onPostExecute(Parcelable)} and is passed the value
-     * returned by {@link #processTag(Tag)}. The default implementation is to
-     * use {@link Activity#setResult(int, Intent)} followed by
+     * returned by {@link #processTag(Intent, Tag)}. The default implementation
+     * is to use {@link Activity#setResult(int, Intent)} followed by
      * {@link Activity#finish()} on the assumption that this activity was
      * started for its result, but this class can be overridden to supplement or
      * replace that default behavior.
      * 
      * @param resultCode
      *            the result code set in
-     *            {@link ProcessTagTask#doInBackground(Tag...)}
+     *            {@link ProcessTagTask#doInBackground(Void...)}
      * 
      * @param result
-     *            the value returned by {@link #processTag(Tag)}
+     *            the value returned by {@link #processTag(Intent, Tag)}
      */
     protected void onTagProcessed(int resultCode, ResultType result) {
 
@@ -505,15 +559,20 @@ public abstract class NfcReaderActivity<ResultType extends Parcelable> extends
      * thread, a fact that can be relied on and must be taken account of by
      * derived classes' implementations of this <code>abstract</code> method.
      * 
+     * @param newIntent
+     *            the {@link Intent} passed to {@link #onNewIntent(Intent)} in
+     *            the response to the foreground dispatch request
+     * 
      * @param tag
-     *            the {@link Tag}
+     *            the {@link Tag} extracted from <code>newIntent</code> as a
+     *            convenience
      * 
      * @return the result of processing the {@link Tag}
      * 
      * @throws ProcessTagException
      *             if an error occurs while processing the {@link Tag}
      */
-    protected abstract ResultType processTag(Tag tag)
+    protected abstract ResultType processTag(Intent newIntent, Tag tag)
             throws ProcessTagException;
 
 }

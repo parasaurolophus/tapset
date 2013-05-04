@@ -2,6 +2,7 @@ package us.rader.tapset;
 
 import us.rader.nfc.NfcReaderActivity;
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.Tag;
@@ -27,8 +28,8 @@ public class ReadTestActivity extends NfcReaderActivity<NdefMessage> {
      * This of strings to display in the UI
      * 
      * This is initialized to an empty list in {@link #onCreate(Bundle)} and
-     * updated in {@link #processTag(Tag)}. The list is actually displayed in
-     * {@link #onTagProcessed(int, NdefMessage)}
+     * updated in {@link #processTag(Intent, Tag)}. The list is actually
+     * displayed in {@link #onTagProcessed(int, NdefMessage)}
      */
     private String[] items;
 
@@ -115,7 +116,7 @@ public class ReadTestActivity extends NfcReaderActivity<NdefMessage> {
      * Display the contents of the {@link Tag} to the user
      */
     @Override
-    protected NdefMessage processTag(Tag tag) {
+    protected NdefMessage processTag(Intent newIntent, Tag tag) {
 
         try {
 

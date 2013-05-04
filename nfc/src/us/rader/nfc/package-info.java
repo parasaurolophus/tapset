@@ -34,7 +34,10 @@
  * The goal is to allow {@link android.app.Activity} classes derived from the ones in this package
  * to focus on app-specific behaviors while inheriting the logic necessary to inter-operate correctly
  * with the {@link android.nfc.NfcAdapter} "foreground dispatch" mechanism as well as its API for
- * writing a {@link android.nfc.NdefMessage} to a {@link android.nfc.Tag}
+ * writing a {@link android.nfc.NdefMessage} to a {@link android.nfc.Tag} In doing so, these classes
+ * demonstrate one of the key features of object-oriented programming, polymorphism, in a way that
+ * allows for code re-use via inheritance while exploiting certain Java features to help guard
+ * against misbehavior of derived classes.
  * </p>
  */
 package us.rader.nfc;
