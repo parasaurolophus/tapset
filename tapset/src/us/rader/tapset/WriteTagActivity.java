@@ -26,6 +26,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
+import android.nfc.tech.Ndef;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
@@ -60,9 +61,16 @@ public final class WriteTagActivity extends NdefWriterActivity {
     }
 
     /**
+     * The {@link Intent#getParcelableExtra(String)} key used to convery the
+     * scanned {@link NdefMessage} back to the {@link Activity} that started
+     * this one
+     */
+    public static final String EXTRA_RESULT = "us.rader.tapset.result"; //$NON-NLS-1$
+
+    /**
      * The current operating {@link Mode}
      */
-    private Mode mode;
+    private Mode               mode;
 
     /**
      * Wizard-generated handler for an options {@link MenuItem}
@@ -103,12 +111,12 @@ public final class WriteTagActivity extends NdefWriterActivity {
      * {@link Intent#getData()} for the {@link Intent} used to launch this
      * {@link WriteTagActivity}
      * 
-     * @return the {@link NdefMessage} for the requested {@lini Uri}
+     * @return the {@link NdefMessage} for the requested {@link Uri}
      * 
-     * @see NdefWriterActivity#createNdefMessage()
+     * @see NdefWriterActivity#createNdefMessage(Ndef)
      */
     @Override
-    protected NdefMessage createNdefMessage() {
+    protected NdefMessage createNdefMessage(Ndef ndef) {
 
         switch (mode) {
 
@@ -153,6 +161,31 @@ public final class WriteTagActivity extends NdefWriterActivity {
     }
 
     /**
+     * Handle notification that a {@link NdefMessage} has been detected
+     * 
+     * @param result
+     *            the {@link NdefMessage}
+     */
+    @Override
+    protected void onTagProcessed(NdefMessage result) {
+
+        if (result == null) {
+
+            setResult(RESULT_FIRST_USER);
+
+        } else {
+
+            Intent intent = new Intent();
+            intent.putExtra(EXTRA_RESULT, result);
+            setResult(RESULT_OK, intent);
+
+        }
+
+        finish();
+
+    }
+
+    /**
      * Create a {@link NdefMessage} containing a {@link NdefRecord} representing
      * the {@link Uri} that was passed in the {@link Intent} with which this
      * activity was launched
@@ -163,7 +196,7 @@ public final class WriteTagActivity extends NdefWriterActivity {
 
         Intent intent = getIntent();
         Uri uri = intent.getData();
-        NdefRecord record = createUriRecord(uri);
+        NdefRecord record = createUri(uri);
         return new NdefMessage(new NdefRecord[] { record });
 
     }
@@ -176,12 +209,11 @@ public final class WriteTagActivity extends NdefWriterActivity {
      */
     private NdefMessage createTestMessage() {
 
-        NdefRecord uRecord = createUriRecord(Uri
-                .parse("http://www.rader.us/tapset")); //$NON-NLS-1$
-        NdefRecord aRecord = createUriRecord(Uri
+        NdefRecord uRecord = createUri(Uri.parse("http://www.rader.us/tapset")); //$NON-NLS-1$
+        NdefRecord aRecord = createUri(Uri
                 .parse("tapset://www.rader.us/tapset")); //$NON-NLS-1$
-        NdefRecord tRecord = createTextRecord("test record", "en"); //$NON-NLS-1$ //$NON-NLS-2$
-        NdefRecord mRecord = createMimeRecord("application/x-tapset", //$NON-NLS-1$
+        NdefRecord tRecord = createText("test record", "en"); //$NON-NLS-1$ //$NON-NLS-2$
+        NdefRecord mRecord = createMime("application/x-tapset", //$NON-NLS-1$
                 new byte[] { 0, 1, 2 });
         return new NdefMessage(new NdefRecord[] { uRecord, aRecord, tRecord,
                 mRecord });

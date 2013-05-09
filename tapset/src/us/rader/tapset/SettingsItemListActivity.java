@@ -19,7 +19,6 @@ package us.rader.tapset;
 
 import java.util.Locale;
 
-import us.rader.nfc.NdefWriterActivity;
 import us.rader.tapset.settingsitems.SettingsItem;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -58,11 +57,6 @@ public class SettingsItemListActivity extends FragmentActivity implements
         SettingsItemListFragment.ItemSelectedListener {
 
     /**
-     * {@link Intent} action used when invoking {@link ShowQrCodeActivity}
-     */
-    private static final String ACTION_SHOW_QR          = "us.rader.tapset.showqr";    //$NON-NLS-1$
-
-    /**
      * {@link Intent} action used when invoking {@link WriteTagActivity} to
      * perform a NFC reading unit test
      */
@@ -94,6 +88,11 @@ public class SettingsItemListActivity extends FragmentActivity implements
      * Request code when invoking {@link WriteTagActivity} in unit test mode
      */
     public static final int     REQUEST_CODE_WRITE_TEST = 3;
+
+    /**
+     * {@link Intent} action used when invoking {@link ShowQrCodeActivity}
+     */
+    private static final String ACTION_SHOW_QR          = "us.rader.tapset.showqr";    //$NON-NLS-1$
 
     /**
      * Display the given string in an {@link AlertDialog}
@@ -140,7 +139,7 @@ public class SettingsItemListActivity extends FragmentActivity implements
             Intent resultIntent) {
 
         NdefMessage message = resultIntent
-                .getParcelableExtra(NdefWriterActivity.EXTRA_RESULT);
+                .getParcelableExtra(WriteTagActivity.EXTRA_RESULT);
 
         if (message == null) {
 
@@ -173,7 +172,7 @@ public class SettingsItemListActivity extends FragmentActivity implements
             Intent resultIntent) {
 
         NdefMessage message = resultIntent
-                .getParcelableExtra(NdefWriterActivity.EXTRA_RESULT);
+                .getParcelableExtra(WriteTagActivity.EXTRA_RESULT);
 
         if (message == null) {
 

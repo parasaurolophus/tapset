@@ -1,578 +1,339 @@
-/*
- * Copyright 2013 Kirk Rader
-
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-
- */
-
 package us.rader.nfc;
 
-import java.io.UnsupportedEncodingException;
-
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.nfc.NdefMessage;
-import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
-import android.nfc.tech.TagTechnology;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
 /**
- * Abstract super class of {@link Activity} objects that wait for a NFC
- * {@link Tag} to be scanned and process it in some way
+ * Super class for any {@link Activity} that uses the {@link NfcAdapter}
+ * foreground dispatch mechanism
  * 
  * <p>
- * Most apps that access read or write NFC tags must have at least one
- * {@link Activity} that uses the {@link NfcAdapter} foreground dispatch
- * mechanism. Doing so requires a good deal of boilerplate logic not only to
- * properly inter-operate with the NF API at specific points in the
- * {@link Activity} life-cycle, but also must take care to do so in a way that
- * ensure that the correct operations are are carried out in the appropriate
- * threads.
+ * The foreground dispatch mechanism is the Android API for allowing an app to
+ * wait for the user to scan a NFC tag and then take some action based on the
+ * tag's contents, while bypassing any other apps that might be registered for
+ * the same type of content. It is implemented by overriding particular
+ * {@link Activity} life-cycle methods in specific ways. This class provides
+ * derived classes with the boilerplate implementation necessary to use the
+ * foreground dispatch mechanism, defining its own overridable methods to allow
+ * app-specific processing of the tags' contents.
  * </p>
  * 
  * <p>
- * In addition, the NDEF records that are used by most applications require
- * complex formatting and parsing logic that is not well supported in any but
- * the very most recent versions of the Android SDK.
+ * The generic parameter, <code>ContentType</code>, is declared as the type
+ * returned by {@link #processTag(Tag)} and expected by
+ * {@link #onTagProcessed(Parcelable)} . It is constrained to extend
+ * {@link Parcelable} so that such values can be easily passed from one
+ * {@link Activity} to another as {@link Intent} extras and similar facilities
+ * that require marshaling and un-marshaling via a {@link Parcel}.
  * </p>
  * 
  * <p>
- * This class and {@link NdefWriterActivity} which extends it, provide the
- * standard boilerplate code for any application that uses these Android
- * features to read and write NFC tags, respectively.
+ * This class presents the most bare-bones access to any NFC tag supported by
+ * the drivers on any given device. If your need is to support a particular tag
+ * technology, e.g. NDEF formatted tags, you should extend one of the
+ * technology-specific library classes derived from this one rather than
+ * extending this class directly.
  * </p>
  * 
- * @param <ResultType>
- *            the type of object returned by {@link #processTag(Intent, Tag)}
- *            and expected by {@link #onTagProcessed(int, Parcelable)}
+ * @param <ContentType>
+ *            the type of result to return from {@link #processTag(Tag)}
  * 
- * @see #onCreate(Bundle)
- * @see #onResume()
- * @see #onPause()
- * @see #onNewIntent(Intent)
+ * @see #processTag(Tag)
+ * @see #onTagProcessed(Parcelable)
+ * @see NdefReaderActivity
+ * @see NdefWriterActivity
  * 
  * @author Kirk
  */
-public abstract class NfcReaderActivity<ResultType extends Parcelable> extends
+public abstract class NfcReaderActivity<ContentType extends Parcelable> extends
         Activity {
 
     /**
-     * Invoke {@link NfcReaderActivity#processTag(Intent, Tag)} asynchronously.
+     * Invoke {@Link NfcReaderActivity#processTag(Tag)} and {@Link
+     *  NfcReaderActivity#onTagProcessed(Parcelable)} asynchronously
      * 
-     * Much of the Android NFC API must be called in worker threads separate
-     * from the UI thread. Notifications of state changes, on the other hand,
-     * should be handled on the main UI thread. This class uses the
-     * {@link AsyncTask} to arrange to call the derived class's {@link Tag}
-     * handling code in the correct threads
+     * Much of the NFC related API must be invoked on a worker thread separate
+     * from the main UI thread, and yet the app also must be able to update the
+     * state of its UI once the contents of a tag has been obtained. This
+     * {@link AsyncTask} arranges to invoke the appropriate methods in the
+     * appropriate threads.
      * 
-     * @see NfcReaderActivity#processTag(Intent, Tag)
+     * @see NfcReaderActivity#processTag(Tag)
+     * @see NfcReaderActivity#onTagProcessed(Parcelable)
      * 
      * @author Kirk
-     * 
      */
-    private class ProcessTagTask extends AsyncTask<Void, Void, ResultType> {
+    private class ProcessTagTask extends AsyncTask<Tag, Void, ContentType> {
 
         /**
-         * The {@link Intent} passed to
-         * {@link NfcReaderActivity#onNewIntent(Intent)}
-         */
-        private Intent newIntent;
-
-        /**
-         * The {@link Tag} extracted from {@link #newIntent} as a convenience
-         */
-        private Tag    tag;
-
-        /**
-         * Initialize {@link #newIntent} and {@link #tag}
+         * Invoke {@link NfcReaderActivity#processTag(Tag)} in a worker thread
          * 
-         * @param newIntent
-         *            the {@link Intent}
+         * @param tags
+         *            <code>tags[0]</code> is the {@link Tag} obtained using the
+         *            foreground dispatch mechanism
          * 
-         * @param tag
-         *            the {@link Tag}
-         */
-        public ProcessTagTask(Intent newIntent, Tag tag) {
-
-            this.newIntent = newIntent;
-            this.tag = tag;
-
-        }
-
-        /**
-         * The result code to pass back to the {@link Activity} that started
-         * this one
-         */
-        private int resultCode;
-
-        /**
-         * Invoke {@link NfcReaderActivity#processTag(Intent, Tag)} in the
-         * worker thread
+         * @return the value returned by
+         *         {@link NfcReaderActivity#processTag(Tag)}
          * 
-         * @param params
-         *            ignored, since the relevent values were passed to the
-         *            constructor
-         * 
-         * @see NfcReaderActivity#processTag(Intent, Tag)
+         * @see AsyncTask#doInBackground(Object...)
+         * @see NfcReaderActivity#processTag(Tag)
          */
         @Override
-        protected ResultType doInBackground(Void... params) {
+        protected ContentType doInBackground(Tag... tags) {
 
             try {
 
-                resultCode = RESULT_OK;
-                return processTag(newIntent, tag);
-
-            } catch (ProcessTagException e) {
-
-                Log.e(getClass().getName(), "doInBackground", e); //$NON-NLS-1$
-                resultCode = e.getResultCode();
-                return null;
+                setLastStatus(null);
+                return processTag(tags[0]);
 
             } catch (Exception e) {
 
-                Log.e(getClass().getName(), "doInBackground", e); //$NON-NLS-1$
-                resultCode = RESULT_TECHNOLOGY_ERROR;
+                Log.e(getClass().getName(), "error processing tag", e); //$NON-NLS-1$
+
+                if (getLastStatus() == null) {
+
+                    setLastStatus(e.getMessage());
+
+                }
+
                 return null;
 
             }
         }
 
         /**
-         * Report the result of processing the {@link Tag} to the user in an
-         * {@link AlertDialog} and then exit this {@link NfcReaderActivity}
+         * Invoke {@link NfcReaderActivity#onTagProcessed(Parcelable)} on the UI
+         * thread
+         * 
+         * @param result
+         *            the value returned by
+         *            {@link NfcReaderActivity#processTag(Tag)}
+         * 
+         * @see AsyncTask#onPostExecute(Object)
+         * @see NfcReaderActivity#processTag(Tag)
+         * @see NfcReaderActivity#onTagProcessed(Parcelable)
          */
         @Override
-        protected void onPostExecute(ResultType result) {
+        protected void onPostExecute(ContentType result) {
 
-            onTagProcessed(resultCode, result);
+            try {
 
-        }
+                onTagProcessed(result);
 
-    }
+            } catch (Exception e) {
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /**
-     * {@link Intent#getStringExtra(String)} key used to return result of
-     * invoking {@link #processTag(Intent, Tag)} to the {@link Activity} that started
-     * this one
-     */
-    public static final String   EXTRA_RESULT            = "us.rader.nfc.result"; //$NON-NLS-1$
-
-    /**
-     * Result code indicating that there is no {@link NdefMessage} to process
-     */
-    public static final int      RESULT_NO_MESSAGE       = RESULT_FIRST_USER;
-
-    /**
-     * Result code indicating that the {@link Tag} passed to
-     * {@link #processTag(Intent, Tag)} was <code>null</code>
-     */
-    public static final int      RESULT_NO_TAG           = RESULT_FIRST_USER + 1;
-
-    /**
-     * Result code indicating that the {@link Tag} passed to
-     * {@link #processTag(Intent, Tag)} was <code>null</code>
-     */
-    public static final int      RESULT_NOT_FORMATABLE   = RESULT_FIRST_USER + 2;
-
-    /**
-     * Result code indicating that some method of some class that implements
-     * {@link TagTechnology} threw an exception
-     */
-    public static final int      RESULT_TECHNOLOGY_ERROR = RESULT_FIRST_USER + 3;
-
-    /**
-     * The special-case URI prefixes for 'U' NDEF records
-     */
-    protected static final String[] WELL_KNOWN_URI_PREFIXES = {
-
-    //@formatter:off
-
-        // not a recognized prefix, use code 0
-        "",             //$NON-NLS-1$
-
-        // well-known prefix code 1
-        "http://www.",  //$NON-NLS-1$
-
-        // well-known prefix code 2
-        "https://www.", //$NON-NLS-1$
-
-        // well-known prefix code 3
-        "http://",      //$NON-NLS-1$
-
-        // well-known prefix code 4
-        "https://"      //$NON-NLS-1$
-
-    };
-
-    //@formatter:on
-
-    /**
-     * Decode the payload of the given {@link NdefRecord} according to the rules
-     * for the various kinds of NDEF messages it might contain
-     * 
-     * This will return the string representation of the payload or
-     * <code>null</code> if there is no way to deduce the correct string
-     * 
-     * @param record
-     *            the {@link NdefRecord}
-     * 
-     * @return the payload as a string, or <code>null</code> if no such mapping
-     *         can be deduced merely from the {@link NdefRecord} properties
-     */
-    public static String decodePayload(NdefRecord record) {
-
-        try {
-
-            if (record == null) {
-
-                return null;
+                Log.e(getClass().getName(), "error processing tag content", e); //$NON-NLS-1$
 
             }
-
-            byte[] type = record.getType();
-            byte[] payload = record.getPayload();
-
-            switch (record.getTnf()) {
-
-                case NdefRecord.TNF_ABSOLUTE_URI:
-
-                    return new String(type, "US-ASCII"); //$NON-NLS-1$
-
-                case NdefRecord.TNF_WELL_KNOWN:
-
-                    return decodeWellKnown(type, payload);
-
-                default:
-
-                    return null;
-
-            }
-
-        } catch (UnsupportedEncodingException e) {
-
-            Log.e(NfcReaderActivity.class.getName(), "decodePayload", e); //$NON-NLS-1$
-            throw new IllegalStateException(e);
-
-        }
-    }
-
-    /**
-     * Test two byte arrays for equality
-     * 
-     * Special-case version of <code>equals</code> that is a missing critical
-     * feature in Java
-     * 
-     * @param array1
-     *            the first array
-     * 
-     * @param array2
-     *            the second array
-     * 
-     * @return <code>true</code> if and only if both parameters are
-     *         <code>null</code> or byte arrays of identical length with
-     *         identical contents
-     */
-    protected static boolean equals(byte[] array1, byte[] array2) {
-
-        if (array1 == null) {
-
-            return (array2 == null);
-
-        }
-
-        if (array2 == null) {
-
-            return false;
-
-        }
-
-        if (array1.length != array2.length) {
-
-            return false;
-
-        }
-
-        for (int index = 0; index < array1.length; ++index) {
-
-            if (array1[index] != array2[index]) {
-
-                return false;
-
-            }
-
-        }
-
-        return true;
-
-    }
-
-    /**
-     * Return the given payload as a string based on the given type
-     * 
-     * @param type
-     *            the {@link NdefRecord#getType()} value denoting how to
-     *            interpret <code>payload</code>
-     * 
-     * @param payload
-     *            the payload bytes
-     * 
-     * @return the string that results from decoding the given payload array
-     * 
-     * @throws UnsupportedEncodingException
-     *             if there is a bug in the VM
-     */
-    private static String decodeWellKnown(byte[] type, byte[] payload)
-            throws UnsupportedEncodingException {
-
-        if (equals(type, NdefRecord.RTD_TEXT)) {
-
-            int index = payload[0] + 1;
-            int textLength = payload.length - index;
-            return new String(payload, index, textLength, "UTF-8"); //$NON-NLS-1$
-
-        } else if (equals(type, NdefRecord.RTD_URI)) {
-
-            return WELL_KNOWN_URI_PREFIXES[payload[0]]
-                    + new String(payload, 1, payload.length - 1, "US-ASCII"); //$NON-NLS-1$
-
-        } else {
-
-            return null;
-
         }
 
     }
 
     /**
-     * Cached {@link NfcAdapter} for use by {@link #onResume()} and
-     * {@link #onPause()}
+     * Cached instance of {@link NfcAdapter} for use in conjunction with the
+     * foreground dispatch mechanism
      * 
-     * @see #onCreate(Bundle)
-     * @see #onResume()
      * @see #onPause()
-     * @see #onNewIntent(Intent)
+     * @see #onResume()
      */
-    private NfcAdapter     nfcAdapter;
+    private NfcAdapter     adapter;
 
     /**
-     * Cached {@link NfcAdapter} for use by {@link #onResume()}
+     * Cached {@link IntentFilter} array for use in conjunction with the
+     * foreground dispatch mechanism
      * 
-     * @see #onCreate(Bundle)
      * @see #onResume()
-     * @see #onPause()
-     * @see #onNewIntent(Intent)
+     */
+    private IntentFilter[] filters;
+
+    /**
+     * Set to <code>null</code> before each invocation of
+     * {@link #processTag(Tag)} and set to a diagnostic string if any errors
+     * occur
+     * 
+     * @see #getLastStatus()
+     */
+    private String         lastStatus;
+
+    /**
+     * Cached {@link PendingIntent} for use in conjunction with the foreground
+     * dispatch mechanism
+     * 
+     * @see #onResume()
      */
     private PendingIntent  pendingIntent;
 
     /**
-     * Cached {@link NfcAdapter} for use by {@link #onResume()}
-     * 
-     * @see #onCreate(Bundle)
-     * @see #onResume()
-     * @see #onPause()
-     * @see #onNewIntent(Intent)
+     * Set {@link #lastStatus} to <code>null</code>
      */
-    private IntentFilter[] pendingIntentFilters;
+    protected NfcReaderActivity() {
 
-    /**
-     * Return the {@link Intent} to wrap in a {@link PendingIntent} for use with
-     * the foreground dispatch mechanism
-     * 
-     * You should rarely, if ever, need to override this but it is placed in a
-     * protected method just in case...
-     * 
-     * @return the {@link Intent} for to handle the result of the foreground
-     *         dispatch to scan a {@link Tag}
-     */
-    protected Intent getDeferredIntent() {
-
-        return new Intent(this, getClass());
+        lastStatus = null;
 
     }
 
     /**
-     * Prepare this instance to be displayed
+     * Status message or <code>null</code> if no errors occurred during most
+     * recent invocation of {@link #processTag(Tag)}
      * 
+     * @return the most recent status message or <code>null</code>
+     */
+    public final String getLastStatus() {
+
+        return lastStatus;
+
+    }
+
+    /**
+     * Set {@link #lastStatus} to the given value
      * 
-     * @see #onResume()
-     * @see #onPause()
+     * @param lastStatus
+     *            the new value for {@link #lastStatus}
+     */
+    public final void setLastStatus(String lastStatus) {
+
+        this.lastStatus = lastStatus;
+
+    }
+
+    /**
+     * Initialize the data structures used in conjunction with the foreground
+     * dispatch mechanism
+     * 
+     * @param savedInstanceState
+     *            saved state of the UI or <code>null</code>
+     * 
+     * @see android.app.Activity#onCreate(android.os.Bundle)
      * @see #onNewIntent(Intent)
+     * @see #onPause()
+     * @see #onResume()
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        nfcAdapter = NfcAdapter.getDefaultAdapter(this);
-        Intent intent = getDeferredIntent();
-        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP
-                | Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        // cache the default NFC adapater
+        adapter = NfcAdapter.getDefaultAdapter(this);
+
+        // create the PendingIntent
+        Intent intent = new Intent(this, getClass());
+        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
-        IntentFilter ndefDiscoveredFilter = new IntentFilter(
+
+        // create the IntentFilter array
+        IntentFilter ndefFilter = new IntentFilter(
                 NfcAdapter.ACTION_NDEF_DISCOVERED);
-        IntentFilter tagDiscoveredFilter = new IntentFilter(
+        IntentFilter tagFilter = new IntentFilter(
                 NfcAdapter.ACTION_TAG_DISCOVERED);
-        pendingIntentFilters = new IntentFilter[] { ndefDiscoveredFilter,
-                tagDiscoveredFilter };
+        filters = new IntentFilter[] { ndefFilter, tagFilter };
 
     }
 
     /**
-     * Handle an {@link Intent} received in response to the
-     * {@link #pendingIntent} used with the {@link #nfcAdapter} foreground
-     * dispatch mechanism.
+     * This method is called by the foreground dispatch mechanism when a
+     * {@link Tag} has been detected and is ready to be processed
      * 
-     * @see #onCreate(Bundle)
-     * @see #onResume()
+     * This method uses {@link ProcessTagTask} to process the {@link Tag}
+     * obtained from the given {@link Tag} asynchronously and is
+     * <code>final</code> to protect derived classes from accidentally
+     * subverting the tightly coupled interaction between
+     * {@link #onNewIntent(Intent)} , {@Link #onPause()} and
+     * {@link #onResume()}
+     * 
+     * @param intent
+     *            the {@link Intent} containing the data returned to this app
+     *            from the foreground dispatch mechanism
+     * 
+     * @see android.app.Activity#onNewIntent(android.content.Intent)
      * @see #onPause()
+     * @see #onResume()
+     * @see ProcessTagTask
      */
     @Override
     protected final void onNewIntent(Intent intent) {
 
         super.onNewIntent(intent);
         Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-        ProcessTagTask processTagTask = new ProcessTagTask(intent, tag);
-        processTagTask.execute();
+        new ProcessTagTask().execute(tag);
 
     }
 
     /**
-     * Disable the {@link #nfcAdapter} foreground dispatch
-     * {@link #pendingIntent}
+     * Disable foreground dispatch when this {@link Activity} is paused
      * 
-     * @see #onCreate(Bundle)
-     * @see #onResume()
+     * This method is <code>final</code> so as to protect derived classes from
+     * accidentally subverting the tightly coupled behavior of
+     * {@link #onNewIntent(Intent)} , {@link #onPause()} and {@link #onResume()}
+     * 
+     * @see android.app.Activity#onPause()
      * @see #onNewIntent(Intent)
+     * @see #onResume()
      */
     @Override
     protected final void onPause() {
 
         super.onPause();
-        nfcAdapter.disableForegroundDispatch(this);
+        adapter.disableForegroundDispatch(this);
 
     }
 
     /**
-     * Enable the {@link #nfcAdapter} foreground dispatch {@link #pendingIntent}
+     * Enable foreground dispatch when this {@link Activity} is resumed
      * 
-     * @see #onCreate(Bundle)
-     * @see #onPause()
+     * This method is <code>final</code> so as to protect derived classes from
+     * accidentally subverting the tightly coupled behavior of
+     * {@link #onNewIntent(Intent)} , {@link #onPause()} and {@link #onResume()}
+     * 
+     * @see android.app.Activity#onResume()
      * @see #onNewIntent(Intent)
+     * @see #onPause()
      */
     @Override
     protected final void onResume() {
 
-        super.onResume();
-        nfcAdapter.enableForegroundDispatch(this, pendingIntent,
-                pendingIntentFilters, null);
+        super.onRestart();
+        adapter.enableForegroundDispatch(this, pendingIntent, filters, null);
 
     }
 
     /**
-     * Handle the result of having processed a {@link Tag}
+     * Handle the result of processing a {@link Tag}
      * 
-     * This method is invoked by
-     * {@link ProcessTagTask#onPostExecute(Parcelable)} and is passed the value
-     * returned by {@link #processTag(Intent, Tag)}. The default implementation
-     * is to use {@link Activity#setResult(int, Intent)} followed by
-     * {@link Activity#finish()} on the assumption that this activity was
-     * started for its result, but this class can be overridden to supplement or
-     * replace that default behavior.
-     * 
-     * @param resultCode
-     *            the result code set in
-     *            {@link ProcessTagTask#doInBackground(Void...)}
+     * This method exists separately from {@link #processTag(Tag)} because of
+     * the different contexts in which they are invoked. Specifically,
+     * {@link #processTag(Tag)} is invoked in a worker thread as required by
+     * most of the NFC API, while {@link #onTagProcessed(Parcelable)} is invoked
+     * in the UI thread
      * 
      * @param result
-     *            the value returned by {@link #processTag(Intent, Tag)}
+     *            the value returned by {@link #processTag(Tag)}
+     * 
+     * @see #processTag(Tag)
      */
-    protected void onTagProcessed(int resultCode, ResultType result) {
-
-        Intent intent = new Intent();
-
-        if (result == null) {
-
-            setResult(resultCode);
-
-        } else {
-
-            intent.putExtra(EXTRA_RESULT, result);
-            setResult(resultCode, intent);
-
-        }
-
-        finish();
-
-    }
+    protected abstract void onTagProcessed(ContentType result);
 
     /**
-     * Handle the result of scanning a NFC {@link Tag}
+     * Process a {@link Tag}
      * 
-     * Note that this will be invoked in a worker thread separate from the UI
-     * thread, a fact that can be relied on and must be taken account of by
-     * derived classes' implementations of this <code>abstract</code> method.
-     * 
-     * @param newIntent
-     *            the {@link Intent} passed to {@link #onNewIntent(Intent)} in
-     *            the response to the foreground dispatch request
+     * This method can rely on, and must take account of being called in a
+     * worker thread separate from the main UI.
      * 
      * @param tag
-     *            the {@link Tag} extracted from <code>newIntent</code> as a
-     *            convenience
+     *            the {@link Tag}
      * 
-     * @return the result of processing the {@link Tag}
-     * 
-     * @throws ProcessTagException
-     *             if an error occurs while processing the {@link Tag}
+     * @return the app-specific data structure that is the result of having
+     *         processed the {@link Tag}
      */
-    protected abstract ResultType processTag(Intent newIntent, Tag tag)
-            throws ProcessTagException;
+    protected abstract ContentType processTag(Tag tag);
 
 }
