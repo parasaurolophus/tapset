@@ -17,8 +17,6 @@
 
 package us.rader.tapset;
 
-import java.util.Locale;
-
 import us.rader.tapset.settingsitems.SettingsItem;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -57,42 +55,15 @@ public class SettingsItemListActivity extends FragmentActivity implements
         SettingsItemListFragment.ItemSelectedListener {
 
     /**
-     * {@link Intent} action used when invoking {@link WriteTagActivity} to
-     * perform a NFC reading unit test
-     */
-    public static final String  ACTION_READ_TEST        = "us.rader.tapset.test.read"; //$NON-NLS-1$
-
-    /**
-     * {@link Intent} action used when invoking {@link WriteTagActivity} to
-     * perform a NFC reading unit test
-     */
-    public static final String  ACTION_WRITE_TEST       = "us.rader.tapset.test.write"; //$NON-NLS-1$
-
-    /**
-     * Debug mode
-     */
-    public static final boolean DEBUG                   = false;
-
-    /**
-     * Request code when invoking {@link ReadTestActivity} in unit test mode
-     */
-    public static final int     REQUEST_CODE_READ_TEST  = 1;
-
-    /**
      * Request code when invoking {@link WriteTagActivity} in normal operating
      * mode
      */
-    public static final int     REQUEST_CODE_WRITE_TAG  = 2;
-
-    /**
-     * Request code when invoking {@link WriteTagActivity} in unit test mode
-     */
-    public static final int     REQUEST_CODE_WRITE_TEST = 3;
+    public static final int     REQUEST_CODE_WRITE_TAG = 1;
 
     /**
      * {@link Intent} action used when invoking {@link ShowQrCodeActivity}
      */
-    private static final String ACTION_SHOW_QR          = "us.rader.tapset.showqr";    //$NON-NLS-1$
+    private static final String ACTION_SHOW_QR         = "us.rader.tapset.showqr";    //$NON-NLS-1$
 
     /**
      * Display the given string in an {@link AlertDialog}
@@ -122,39 +93,6 @@ public class SettingsItemListActivity extends FragmentActivity implements
 
         builder.show();
 
-    }
-
-    /**
-     * Handle the response from a request to read from a {@link Tag}
-     * 
-     * @param activity
-     *            the {@link Activity} that received the result
-     * 
-     * @param resultIntent
-     *            the result {@link Intent} passed by the
-     *            {@link ReadTestActivity} using
-     *            {@link Activity#setResult(int, Intent)}
-     */
-    public static void handleReadTagResult(Activity activity,
-            Intent resultIntent) {
-
-        NdefMessage message = resultIntent
-                .getParcelableExtra(WriteTagActivity.EXTRA_RESULT);
-
-        if (message == null) {
-
-            Toast.makeText(activity, R.string.error_processing_tag,
-                    Toast.LENGTH_LONG).show();
-
-        } else {
-
-            byte[] bytes = message.toByteArray();
-            String text = String.format(Locale.getDefault(),
-                    "Successfully read %d bytes", //$NON-NLS-1$
-                    bytes.length);
-            Toast.makeText(activity, text, Toast.LENGTH_LONG).show();
-
-        }
     }
 
     /**
@@ -304,7 +242,6 @@ public class SettingsItemListActivity extends FragmentActivity implements
 
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main_options, menu);
-        addDebugItems(menu);
         return true;
 
     }
@@ -420,14 +357,8 @@ public class SettingsItemListActivity extends FragmentActivity implements
                     break;
 
                 case REQUEST_CODE_WRITE_TAG:
-                case REQUEST_CODE_WRITE_TEST:
 
                     handleWriteTagResult(this, resultIntent);
-                    break;
-
-                case REQUEST_CODE_READ_TEST:
-
-                    handleReadTagResult(this, resultIntent);
                     break;
 
                 default:
@@ -485,70 +416,6 @@ public class SettingsItemListActivity extends FragmentActivity implements
 
             }
         }
-
-    }
-
-    /**
-     * Add debug / unit test menu items if {@link #DEBUG} is <code>true</code>
-     * 
-     * @param menu
-     *            the options {@link Menu}
-     */
-    private void addDebugItems(Menu menu) {
-
-        if (DEBUG) {
-
-            MenuItem item;
-            item = menu.add("Write test..."); //$NON-NLS-1$
-
-            item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-
-                @Override
-                public boolean onMenuItemClick(MenuItem item) {
-
-                    writeTest();
-                    return true;
-
-                }
-
-            });
-
-            item = menu.add("Read test..."); //$NON-NLS-1$
-
-            item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-
-                @Override
-                public boolean onMenuItemClick(MenuItem item) {
-
-                    readTest();
-                    return true;
-
-                }
-
-            });
-
-        }
-    }
-
-    /**
-     * Unit test for reading from a {@link Tag}
-     */
-    private void readTest() {
-
-        Intent intent = new Intent(ACTION_READ_TEST, null, this,
-                ReadTestActivity.class);
-        startActivityForResult(intent, REQUEST_CODE_WRITE_TEST);
-
-    }
-
-    /**
-     * Unit test for writing to a {@link Tag}
-     */
-    private void writeTest() {
-
-        Intent intent = new Intent(ACTION_WRITE_TEST, null, this,
-                WriteTagActivity.class);
-        startActivityForResult(intent, REQUEST_CODE_WRITE_TEST);
 
     }
 

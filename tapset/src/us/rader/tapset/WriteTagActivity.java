@@ -146,18 +146,6 @@ public final class WriteTagActivity extends NdefWriterActivity {
         setupActionBar();
         mode = Mode.NORMAL;
 
-        Intent intent = getIntent();
-
-        if (intent != null) {
-
-            String action = intent.getAction();
-
-            if (SettingsItemListActivity.ACTION_WRITE_TEST.equals(action)) {
-
-                writeTest();
-
-            }
-        }
     }
 
     /**
@@ -232,15 +220,6 @@ public final class WriteTagActivity extends NdefWriterActivity {
             getActionBar().setDisplayHomeAsUpEnabled(true);
 
         }
-    }
-
-    /**
-     * NFC read unit test
-     */
-    private void writeTest() {
-
-        mode = Mode.WRITE_TEST;
-
     }
 
 }
