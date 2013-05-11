@@ -1,11 +1,11 @@
 package us.rader.nfc;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
-import android.nfc.FormatException;
+import android.content.IntentFilter;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
+import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.Ndef;
 import android.util.Log;
@@ -21,6 +21,20 @@ import android.util.Log;
 public abstract class NdefReaderActivity extends NfcReaderActivity<NdefMessage> {
 
     /**
+     * NDEF RTD for text records
+     * 
+     * @see NdefRecord#RTD_TEXT
+     */
+    public static final String      RTD_TEXT              = "T"; //$NON-NLS-1$
+
+    /**
+     * NDEF RTD for URI records
+     * 
+     * @see NdefRecord#RTD_URI
+     */
+    public static final String      RTD_URI               = "U"; //$NON-NLS-1$
+
+    /**
      * Strings to prepend to the URI in a NDEF "well known URI" record.
      * 
      * <p>
@@ -33,13 +47,13 @@ public abstract class NdefReaderActivity extends NfcReaderActivity<NdefMessage> 
      * 
      * <li>{@link NdefRecord#getType()} returns an array with the same contents
      * as {@link NdefRecord#RTD_URI} (i.e. the ASCII representation of the
-     * string "U")
+     * single-character string "U")
      * 
      * <li>The first byte of the array returned by
      * {@link NdefRecord#getPayload()} contains a code denoting a standard URI
-     * prefix
+     * prefix as defined in the NDEF forum specification for such records
      * 
-     * <li>The remaining bytes of array returned by
+     * <li>The remaining bytes of the array returned by
      * {@link NdefRecord#getPayload()} contain the ASCII characters to append to
      * the prefix denoted by the first byte
      * 
@@ -50,44 +64,120 @@ public abstract class NdefReaderActivity extends NfcReaderActivity<NdefMessage> 
      * that appear as the first byte in the payload of such records
      * </p>
      * 
-     * <p>
-     * Note that this format supports a simple form of compression where
-     * standard prefixes as long as 12 bytes (https://www.) are reduced to a
-     * single-byte code for storage in the NFC tag, at the slight cost that for
-     * code 0, meaning no prefix, the tag actually requires 1 extra byte when
-     * compared to records with {@link NdefRecord#TNF_ABSOLUTE_URI} (i.e. use
-     * the latter rather than {@link NdefRecord#TNF_WELL_KNOWN} where the URI
-     * does not begin with one of the standard prefixes for a non-zero offset in
-     * this array).
-     * </p>
-     * 
      * @see #decodeUri(byte[])
      */
-    public static final String[] WELL_KNOWN_URI_PREFIX = {//@formatter:off
+    @SuppressWarnings("nls")
+    protected static final String[] WELL_KNOWN_URI_PREFIX = {
 
-            // code 0 prefix is empty, meaning that you really
-            // should have used TNF_ABSOLUTE_URI instead!
-            "", //$NON-NLS-1$
+                                                          // 0
+            "",
 
-            // code 1 prefix is http://www.
-            "http://www.", //$NON-NLS-1$
+            // 1
+            "http://www.",
 
-            // code 2 prefix is https://www.
-            "https://www.", //$NON-NLS-1$
+            // 2
+            "https://www.",
 
-            // code 3 prefix is http://
-            "http://", //$NON-NLS-1$
+            // 3
+            "http://",
 
-            // code 4 prefix is https://
-            "https://", //$NON-NLS-1$
+            // 4
+            "https://",
 
-            // code 5 prefix is tel:
-            "tel:", //$NON-NLS-1$
+            // 5
+            "tel:",
 
-            // code 6 prefix is mailto:
-            "mailto:" //$NON-NLS-1$
+            // 6
+            "mailto:",
 
-    }; //@formatter:on
+            // 7
+            "ftp://anonymous:anonymous@",
+
+            // 8
+            "ftp://ftp.",
+
+            // 9
+            "ftps://",
+
+            // 10
+            "sftp://",
+
+            // 11
+            "smb://",
+
+            // 12
+            "nfs://",
+
+            // 13
+            "ftp://",
+
+            // 14
+            "dav://",
+
+            // 15
+            "news:",
+
+            // 16
+            "telnet://",
+
+            // 17
+            "imap:",
+
+            // 18
+            "rtsp://",
+
+            // 19
+            "urn:",
+
+            // 20
+            "pop:",
+
+            // 21
+            "sip:",
+
+            // 22
+            "sips:",
+
+            // 23
+            "tftp:",
+
+            // 24
+            "btspp://",
+
+            // 25
+            "btl2cap://",
+
+            // 26
+            "btgoep://",
+
+            // 27
+            "tcpobex://",
+
+            // 28
+            "irdaobex://",
+
+            // 29
+            "file://",
+
+            // 30
+            "urn:epc:id:",
+
+            // 31
+            "urn:epc:tag:",
+
+            // 32
+            "urn:epc:pat:",
+
+            // 33
+            "urn:epc:raw:",
+
+            // 34
+            "urn:epc:",
+
+            // 35
+            "urn:nfc:"
+
+                                                          };
 
     /**
      * Decode the payload from a {@link NdefRecord#TNF_ABSOLUTE_URI} record, or
@@ -117,13 +207,18 @@ public abstract class NdefReaderActivity extends NfcReaderActivity<NdefMessage> 
 
                 case NdefRecord.TNF_ABSOLUTE_URI:
 
-                    // TODO: verify this, really use type rather than payload?
+                    // oddly, the NDEF spec mandates putting the URI in the type
+                    // field rather than the payload
                     return new String(record.getType(), "US-ASCII"); //$NON-NLS-1$
 
                 case NdefRecord.TNF_WELL_KNOWN:
 
                     return decodeWellKnown(record.getType(),
                             record.getPayload());
+
+                case NdefRecord.TNF_MIME_MEDIA:
+
+                    return decodeMime(record.getType(), record.getPayload());
 
                 default:
 
@@ -141,62 +236,44 @@ public abstract class NdefReaderActivity extends NfcReaderActivity<NdefMessage> 
     }
 
     /**
-     * Read the {@link NdefMessage} contained in the given tag, if any
+     * Return the <code>payload</code> decoded using UTF-8 if the MIME
+     * <code>type</code> begins with "text/"
      * 
-     * This will return <code>null</code> if the given {@link Tag} is
-     * <code>null</code> or doesn't contain a {@link NdefMessage}
+     * Some comnonly-used, special-case MIME "media" types correspond to text
+     * data, e.g. vcard data. This method assumes that any record whose MIME
+     * type begins with "text/" has a payload that can interpreted as a UTF-8
+     * text string. It returns <code>null</code> for any other record.
      * 
-     * @param tag
-     *            the {@link Tag}
+     * @param type
+     *            the value returned by {@link NdefRecord#getType()}
      * 
-     * @return the {@link NdefMessage} contained in the given {@link Tag} or
+     * @param payload
+     *            the value returned by {@link NdefRecord#getPayload()}
+     * 
+     * @return the value of <code>payload</code> decoded using UTF-8 or
      *         <code>null</code>
-     * 
-     * @throws IOException
-     *             if an I/O error occurs
-     * 
-     * @throws FormatException
-     *             if a NDEF format error occurs
      */
-    public static NdefMessage readTag(Tag tag) throws IOException,
-            FormatException {
-
-        if (tag == null) {
-
-            return null;
-
-        }
-
-        Ndef ndef = Ndef.get(tag);
-
-        if (ndef == null) {
-
-            Log.w(NdefReaderActivity.class.getName(),
-                    "tag is not NDEF formatted"); //$NON-NLS-1$
-            return null;
-
-        }
-
-        ndef.connect();
+    private static String decodeMime(byte[] type, byte[] payload) {
 
         try {
 
-            NdefMessage message = ndef.getNdefMessage();
+            String mime = new String(type, "UTF-8"); //$NON-NLS-1$
 
-            if (message == null) {
+            if (mime.startsWith("text/")) { //$NON-NLS-1$
 
-                Log.w(NdefReaderActivity.class.getName(),
-                        "NDEF formatted tag is empty"); //$NON-NLS-1$
+                return new String(payload, "UTF-8"); //$NON-NLS-1$
 
             }
 
-            return message;
+        } catch (Exception e) {
 
-        } finally {
-
-            ndef.close();
+            Log.e(NdefReaderActivity.class.getName(),
+                    "error decoding MIME record as text", e); //$NON-NLS-1$
 
         }
+
+        return null;
+
     }
 
     /**
@@ -243,10 +320,13 @@ public abstract class NdefReaderActivity extends NfcReaderActivity<NdefMessage> 
     private static String decodeText(byte[] payload)
             throws UnsupportedEncodingException {
 
-        int languageLength = payload[0];
+        int status = payload[0];
+        int languageLength = status & 0x01F;
+        int encodingFlag = status & 0x80;
+        String encoding = ((encodingFlag == 0) ? "UTF-8" : "UTF-16"); //$NON-NLS-1$//$NON-NLS-2$
         int textStart = languageLength + 1;
         int textLength = payload.length - textStart;
-        return new String(payload, textStart, textLength, "UTF-8"); //$NON-NLS-1$
+        return new String(payload, textStart, textLength, encoding);
 
     }
 
@@ -270,9 +350,9 @@ public abstract class NdefReaderActivity extends NfcReaderActivity<NdefMessage> 
             throws UnsupportedEncodingException {
 
         int code = payload[0];
-        String uri = new String(payload, 1, payload.length - 1, "US-ASCII"); //$NON-NLS-1$
+        String uri = new String(payload, 1, payload.length - 1, "UTF-8"); //$NON-NLS-1$
 
-        if ((code >= 0) && (code < WELL_KNOWN_URI_PREFIX.length)) {
+        if ((code > 0) && (code < WELL_KNOWN_URI_PREFIX.length)) {
 
             uri = WELL_KNOWN_URI_PREFIX[code] + uri;
 
@@ -299,13 +379,13 @@ public abstract class NdefReaderActivity extends NfcReaderActivity<NdefMessage> 
     private static String decodeWellKnown(byte[] type, byte[] payload)
             throws UnsupportedEncodingException {
 
-        String s = new String(type, "US-ASCII"); //$NON-NLS-1$
+        String rtd = new String(type, "US-ASCII"); //$NON-NLS-1$
 
-        if ("T".equals(s)) { //$NON-NLS-1$
+        if (RTD_TEXT.equals(rtd)) {
 
             return decodeText(payload);
 
-        } else if ("U".equals(s)) { //$NON-NLS-1$
+        } else if (RTD_URI.equals(rtd)) {
 
             return decodeUri(payload);
 
@@ -314,6 +394,23 @@ public abstract class NdefReaderActivity extends NfcReaderActivity<NdefMessage> 
             return null;
 
         }
+    }
+
+    /**
+     * Create the {@link IntentFilter} array to use when enabling foreground
+     * dispatch
+     * 
+     * @return the {@link IntentFilter} array
+     */
+    @Override
+    public final IntentFilter[] createNfcIntentFilters() {
+
+        IntentFilter ndefFilter = new IntentFilter(
+                NfcAdapter.ACTION_NDEF_DISCOVERED);
+        IntentFilter tagFilter = new IntentFilter(
+                NfcAdapter.ACTION_TAG_DISCOVERED);
+        return new IntentFilter[] { ndefFilter, tagFilter };
+
     }
 
     /**
@@ -335,7 +432,42 @@ public abstract class NdefReaderActivity extends NfcReaderActivity<NdefMessage> 
 
         try {
 
-            return readTag(tag);
+            if (tag == null) {
+
+                return null;
+
+            }
+
+            Ndef ndef = Ndef.get(tag);
+
+            if (ndef == null) {
+
+                Log.w(NdefReaderActivity.class.getName(),
+                        "tag is not NDEF formatted"); //$NON-NLS-1$
+                return null;
+
+            }
+
+            ndef.connect();
+
+            try {
+
+                NdefMessage message = ndef.getNdefMessage();
+
+                if (message == null) {
+
+                    Log.w(NdefReaderActivity.class.getName(),
+                            "NDEF formatted tag is empty"); //$NON-NLS-1$
+
+                }
+
+                return message;
+
+            } finally {
+
+                ndef.close();
+
+            }
 
         } catch (Exception e) {
 

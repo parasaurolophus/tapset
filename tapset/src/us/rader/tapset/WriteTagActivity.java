@@ -41,36 +41,11 @@ import android.view.MenuItem;
 public final class WriteTagActivity extends NdefWriterActivity {
 
     /**
-     * Operational mode to support unit tests
-     * 
-     * @author Kirk
-     * 
-     */
-    private static enum Mode {
-
-        /**
-         * Normal app mode
-         */
-        NORMAL,
-
-        /**
-         * Perform NFC write unit tests
-         */
-        WRITE_TEST;
-
-    }
-
-    /**
      * The {@link Intent#getParcelableExtra(String)} key used to convery the
      * scanned {@link NdefMessage} back to the {@link Activity} that started
      * this one
      */
     public static final String EXTRA_RESULT = "us.rader.tapset.result"; //$NON-NLS-1$
-
-    /**
-     * The current operating {@link Mode}
-     */
-    private Mode               mode;
 
     /**
      * Wizard-generated handler for an options {@link MenuItem}
@@ -118,17 +93,11 @@ public final class WriteTagActivity extends NdefWriterActivity {
     @Override
     protected NdefMessage createNdefMessage(Ndef ndef) {
 
-        switch (mode) {
+        Intent intent = getIntent();
+        Uri uri = intent.getData();
+        NdefRecord record = createUri(uri);
+        return new NdefMessage(new NdefRecord[] { record });
 
-            case WRITE_TEST:
-
-                return createTestMessage();
-
-            default:
-
-                return createSettingsMessage();
-
-        }
     }
 
     /**
@@ -144,7 +113,6 @@ public final class WriteTagActivity extends NdefWriterActivity {
         setContentView(R.layout.activity_write_tag);
         // Show the Up button in the action bar.
         setupActionBar();
-        mode = Mode.NORMAL;
 
     }
 
@@ -170,41 +138,6 @@ public final class WriteTagActivity extends NdefWriterActivity {
         }
 
         finish();
-
-    }
-
-    /**
-     * Create a {@link NdefMessage} containing a {@link NdefRecord} representing
-     * the {@link Uri} that was passed in the {@link Intent} with which this
-     * activity was launched
-     * 
-     * @return the {@link NdefMessage}
-     */
-    private NdefMessage createSettingsMessage() {
-
-        Intent intent = getIntent();
-        Uri uri = intent.getData();
-        NdefRecord record = createUri(uri);
-        return new NdefMessage(new NdefRecord[] { record });
-
-    }
-
-    /**
-     * Create a {@link NdefMessage} containing a collection of
-     * {@link NdefRecord} instances used in unit tests
-     * 
-     * @return the {@link NdefMessage}
-     */
-    private NdefMessage createTestMessage() {
-
-        NdefRecord uRecord = createUri(Uri.parse("http://www.rader.us/tapset")); //$NON-NLS-1$
-        NdefRecord aRecord = createUri(Uri
-                .parse("tapset://www.rader.us/tapset")); //$NON-NLS-1$
-        NdefRecord tRecord = createText("test record", "en"); //$NON-NLS-1$ //$NON-NLS-2$
-        NdefRecord mRecord = createMime("application/x-tapset", //$NON-NLS-1$
-                new byte[] { 0, 1, 2 });
-        return new NdefMessage(new NdefRecord[] { uRecord, aRecord, tRecord,
-                mRecord });
 
     }
 

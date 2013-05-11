@@ -182,6 +182,14 @@ public abstract class NfcReaderActivity<ContentType extends Parcelable> extends
     }
 
     /**
+     * Create the {@link IntentFilter} array to use when enabling foreground
+     * dispatch
+     * 
+     * @return the {@link IntentFilter} array
+     */
+    public abstract IntentFilter[] createNfcIntentFilters();
+
+    /**
      * Status message or <code>null</code> if no errors occurred during most
      * recent invocation of {@link #processTag(Tag)}
      * 
@@ -231,11 +239,7 @@ public abstract class NfcReaderActivity<ContentType extends Parcelable> extends
         pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
 
         // create the IntentFilter array
-        IntentFilter ndefFilter = new IntentFilter(
-                NfcAdapter.ACTION_NDEF_DISCOVERED);
-        IntentFilter tagFilter = new IntentFilter(
-                NfcAdapter.ACTION_TAG_DISCOVERED);
-        filters = new IntentFilter[] { ndefFilter, tagFilter };
+        filters = createNfcIntentFilters();
 
     }
 

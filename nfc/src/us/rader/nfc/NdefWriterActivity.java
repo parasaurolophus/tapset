@@ -24,14 +24,14 @@ import android.util.Log;
  * identical to that which is used to read one, this class extends
  * {@link NdefReaderActivity} in a manner to which object-oriented purists might
  * object (pun intended) as being "inheritance for implementation," to which the
- * author replies, "you are correct, now get over it." :-)
+ * author replies, "even if you were correct, what is your point?" :-)
  * </p>
  * 
  * <p>
  * One way of dispensing with such criticism would be simply to give the
  * ancestor classes more cumbersome names, like
  * <code>NfcForegroundDispatcherActivity</code> and so on. That, of course, is
- * the real point of the "get over it" quip: complaints about
+ * the real point of the "what is your point?" quip: complaints about
  * "inheritance for implementation" usually miss the point of why
  * object-oriented programming is useful and powerful to start with. It also is
  * often, as in this case, more a matter of terminology and point of view than
@@ -43,6 +43,16 @@ import android.util.Log;
  * </p>
  * 
  * <p>
+ * As a side note along these lines, consider that there has been enough
+ * disagreement about the validity of the proscription against
+ * "inheritance for implementation" that at least one historically significant
+ * object-oriented programming language, C++, makes
+ * "inheritance for implementation" the default form of inheritance between
+ * classes while requiring the explicit use of the <code>public</code> keyword
+ * to establish an "is a" relationship.
+ * </p>
+ * 
+ * <p>
  * If the preceding ruminations fail to convince, another justification for this
  * "abuse" of inheritance, which is at least a little different from a
  * post-rationalization, it should be noted that this class does in fact offer
@@ -51,7 +61,13 @@ import android.util.Log;
  * a "writer" class is also a "reader" and since Java doesn't support a mix-in
  * style of inheritance (i.e. it is sadly deficient in its approach to multiple
  * inheritance) it makes sense to provide for that possibility in the only way
- * practical when constrained by single-inheritance.
+ * practical when constrained by single-inheritance. The validity of this "is a"
+ * relationship is reinforced by the tightly coupled semantics of some of the
+ * helper data structures and methods of both classes, e.g. the inverse
+ * relationships between and common use of
+ * {@link NdefReaderActivity#WELL_KNOWN_URI_PREFIX} by both
+ * {@link NdefReaderActivity#decodeUri(byte[])} and {@link #createUri(String)}
+ * and so on. So there! :-)
  * </p>
  * 
  * @see #createNdefMessage(Ndef)
@@ -60,6 +76,38 @@ import android.util.Log;
  * @author Kirk
  */
 public abstract class NdefWriterActivity extends NdefReaderActivity {
+
+    /**
+     * Create an "external" NDEF record
+     * 
+     * @param domainName
+     *            the domain name to prepend to the external type string
+     * 
+     * @param type
+     *            the external type string
+     * 
+     * @param payload
+     *            the record payload
+     * 
+     * @return the {@link NdefRecord} or <code>null</code> if an error occurs
+     */
+    public static NdefRecord createExternal(String domainName, String type,
+            byte[] payload) {
+
+        try {
+
+            byte[] external = (domainName + ":" + type).getBytes("UTF-8"); //$NON-NLS-1$ //$NON-NLS-2$
+            return new NdefRecord(NdefRecord.TNF_EXTERNAL_TYPE, external, null,
+                    payload);
+
+        } catch (Exception e) {
+
+            Log.e(NdefWriterActivity.class.getName(),
+                    "error encoding external type", e); //$NON-NLS-1$
+            return null;
+
+        }
+    }
 
     /**
      * Create a NDEF MIME media message
@@ -91,6 +139,9 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
     /**
      * Create a NDEF "T" record
      * 
+     * Note that this implementation only supports text strings that can be
+     * encoded using UTF-8 even though the NDEF spec support UTF-16, as well
+     * 
      * @param text
      *            the text string
      * 
@@ -104,17 +155,17 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
         try {
 
             byte[] languageBytes = language.getBytes("UTF-8"); //$NON-NLS-1$
-            byte[] textBytes = text.getBytes("UTF-8"); //$NON-NLS-1$
-            int textStart = languageBytes.length + 1;
-            int length = textBytes.length + textStart;
 
-            if (length > 255) {
+            if (languageBytes.length >= 32) {
 
                 throw new IllegalArgumentException(
-                        "maximum text message size exceeded"); //$NON-NLS-1$
+                        "maximim language code length exceeded"); //$NON-NLS-1$
 
             }
 
+            byte[] textBytes = text.getBytes("UTF-8"); //$NON-NLS-1$
+            int textStart = languageBytes.length + 1;
+            int length = textBytes.length + textStart;
             byte[] payload = new byte[length];
             payload[0] = (byte) languageBytes.length;
             System.arraycopy(languageBytes, 0, payload, 1, languageBytes.length);
@@ -144,41 +195,28 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
 
         try {
 
-            byte code;
-            byte[] bytes;
+            byte code = 0;
+            String prefix = ""; //$NON-NLS-1$
 
-            if (uri.startsWith("http://www.")) { //$NON-NLS-1$
+            for (byte index = 1; index < WELL_KNOWN_URI_PREFIX.length; ++index) {
 
-                code = 1;
-                bytes = uri.substring(11).getBytes("US-ASCII"); //$NON-NLS-1$
+                if (uri.startsWith(WELL_KNOWN_URI_PREFIX[index])) {
 
-            } else if (uri.startsWith("https://www.")) { //$NON-NLS-1$
+                    code = index;
+                    prefix = WELL_KNOWN_URI_PREFIX[index];
 
-                code = 2;
-                bytes = uri.substring(12).getBytes("US-ASCII"); //$NON-NLS-1$
+                }
+            }
 
-            } else if (uri.startsWith("http://")) { //$NON-NLS-1$
+            int prefixLength = prefix.length();
 
-                code = 3;
-                bytes = uri.substring(7).getBytes("US-ASCII"); //$NON-NLS-1$
+            if (prefixLength > 0) {
 
-            } else if (uri.startsWith("https://")) { //$NON-NLS-1$
-
-                code = 4;
-                bytes = uri.substring(8).getBytes("US-ASCII"); //$NON-NLS-1$
-
-            } else if (uri.startsWith("tel:")) { //$NON-NLS-1$
-
-                code = 5;
-                bytes = uri.substring(4).getBytes("US-ASCII"); //$NON-NLS-1$
-
-            } else {
-
-                code = 0;
-                bytes = uri.getBytes("US-ASCII"); //$NON-NLS-1$
+                uri = uri.substring(prefixLength);
 
             }
 
+            byte[] bytes = uri.getBytes("UTF-8"); //$NON-NLS-1$
             byte[] payload = new byte[bytes.length + 1];
             payload[0] = code;
             System.arraycopy(bytes, 0, payload, 1, bytes.length);
