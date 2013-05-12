@@ -2,6 +2,10 @@ package us.rader.nfctest;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import us.rader.nfc.NdefWriterActivity;
 import android.app.Activity;
@@ -10,9 +14,12 @@ import android.nfc.NdefRecord;
 import android.nfc.Tag;
 import android.nfc.tech.Ndef;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.widget.Toast;
 
 /**
@@ -24,15 +31,69 @@ import android.widget.Toast;
 public class MainActivity extends NdefWriterActivity {
 
     /**
+     * Helper used by {@link MainActivity#onTagProcessed(NdefMessage)} to
+     * populate a {@link ListView}
+     * 
+     * @author Kirk
+     * 
+     */
+    private class NdefRecordListAdapter extends SimpleAdapter {
+
+        /**
+         * Pass the parameters through to the <code>super</code> constructor
+         * 
+         * @param data
+         *            the list's contents
+         * 
+         * @param resource
+         *            the list entry layout resource
+         * 
+         * @param from
+         *            the array of keys into each {@link Map} in
+         *            <code>data</code>
+         * 
+         * @param to
+         *            the array of resource id's in the specified list entry
+         *            layout corresponding the keys in <code>from</code>
+         */
+        public NdefRecordListAdapter(List<Map<String, String>> data,
+                int resource, String[] from, int[] to) {
+
+            super(MainActivity.this, data, resource, from, to);
+        }
+
+    }
+
+    /**
+     * Key used to map the decoded content from a {@link NdefRecord}
+     */
+    private static final String KEY_CONTENT = "CONTENT"; //$NON-NLS-1$
+
+    /**
+     * Key used to map {@link NdefRecord#getPayload()}
+     */
+    private static final String KEY_PAYLOAD = "PAYLOAD"; //$NON-NLS-1$
+
+    /**
+     * Key used to map {@link NdefRecord#getTnf()}
+     */
+    private static final String KEY_TNF     = "TNF";    //$NON-NLS-1$
+
+    /**
+     * Key used to map {@link NdefRecord#getType()}
+     */
+    private static final String KEY_TYPE    = "TYPE";   //$NON-NLS-1$
+
+    /**
      * The {@link EditText} used to display the contents of a
      * {@link NdefMessage}
      */
-    private EditText contentText;
+    private ListView            contentList;
 
     /**
      * Perform write tests when <code>true</code>, read tests otherwise
      */
-    private boolean  writeMode;
+    private boolean             writeMode;
 
     /**
      * Inflate the options {@link Menu}
@@ -120,7 +181,7 @@ public class MainActivity extends NdefWriterActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         writeMode = false;
-        contentText = (EditText) findViewById(R.id.contentText);
+        contentList = (ListView) findViewById(R.id.records_list);
 
     }
 
@@ -133,51 +194,71 @@ public class MainActivity extends NdefWriterActivity {
     @Override
     protected void onTagProcessed(NdefMessage message) {
 
-        if (message == null) {
+        List<Map<String, String>> data = new LinkedList<Map<String, String>>();
+        String[] from = new String[] { KEY_TNF, KEY_TYPE, KEY_PAYLOAD,
+                KEY_CONTENT };
+        int[] to = new int[] { R.id.tnf_text, R.id.type_text,
+                R.id.payload_text, R.id.content_text };
 
-            contentText.setText(getString(R.string.no_ndef_message));
-            return;
+        if (message != null) {
 
-        }
+            for (NdefRecord record : message.getRecords()) {
 
-        StringBuffer buffer = new StringBuffer();
-        int count = 0;
+                try {
 
-        for (NdefRecord record : message.getRecords()) {
+                    Map<String, String> map = new HashMap<String, String>();
+                    map.put(KEY_TNF, Short.toString(record.getTnf()));
+                    map.put(KEY_TYPE, new String(record.getType(), "US-ASCII")); //$NON-NLS-1$
+                    map.put(KEY_PAYLOAD, decodeRawPayload(record));
+                    String content = decodePayload(record);
 
-            if (count++ > 0) {
+                    if (content == null) {
 
-                buffer.append("\n\n"); //$NON-NLS-1$
+                        content = ""; //$NON-NLS-1$
 
-            }
+                    }
 
-            try {
+                    map.put(KEY_CONTENT, content);
+                    data.add(map);
 
-                String type = new String(record.getType(), "US-ASCII"); //$NON-NLS-1$
-                String rawPayload = decodeRawPayload(record);
-                String payload = decodePayload(record);
+                } catch (Exception e) {
 
-                buffer.append(record.getTnf());
-                buffer.append("\n"); //$NON-NLS-1$
-                buffer.append(type);
-                buffer.append("\n"); //$NON-NLS-1$
-                buffer.append(rawPayload);
-
-                if (payload != null) {
-
-                    buffer.append("\n"); //$NON-NLS-1$
-                    buffer.append(payload);
+                    Log.e(getClass().getName(), "error parsing NdefRecord", e); //$NON-NLS-1$
 
                 }
-
-            } catch (Exception e) {
-
-                buffer.append(R.string.error_parsing_ndef_record);
-
             }
         }
 
-        contentText.setText(buffer.toString());
+        contentList.setAdapter(new NdefRecordListAdapter(data,
+                R.layout.ndef_details, from, to));
+
+    }
+
+    /**
+     * Return either the result of reading the given {@link Tag} or of writing
+     * the value returned by {@link #createNdefMessage(Ndef)} depending on the
+     * selected test mode
+     */
+    @Override
+    protected NdefMessage processTag(Tag tag) {
+
+        if (writeMode) {
+
+            return super.processTag(tag);
+
+        }
+
+        Ndef ndef = Ndef.get(tag);
+
+        if (ndef == null) {
+
+            display(getString(R.string.not_ndef));
+            return null;
+
+        }
+
+        return ndef.getCachedNdefMessage();
+
     }
 
     /**
@@ -208,33 +289,6 @@ public class MainActivity extends NdefWriterActivity {
         }
 
         return buffer.toString();
-
-    }
-
-    /**
-     * Return either the result of reading the given {@link Tag} or of writing
-     * the value returned by {@link #createNdefMessage(Ndef)} depending on the
-     * selected test mode
-     */
-    @Override
-    protected NdefMessage processTag(Tag tag) {
-
-        if (writeMode) {
-
-            return super.processTag(tag);
-
-        }
-
-        Ndef ndef = Ndef.get(tag);
-
-        if (ndef == null) {
-
-            display(getString(R.string.not_ndef));
-            return null;
-
-        }
-
-        return ndef.getCachedNdefMessage();
 
     }
 
