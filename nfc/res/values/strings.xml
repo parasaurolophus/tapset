@@ -8,5 +8,6 @@
     <string name="record_size_exceeded">maximum record size exceeded</string>
     <string name="read_only_tag">The tag is read-only</string>
     <string name="tag_size_exceeded">Cannot write a message of %1$d bytes; tag size is %2$d</string>
+    <string name="error_reading_ndef_message">Error reading NDEF message from tag</string>
 
 </resources>

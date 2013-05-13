@@ -25,14 +25,264 @@ public abstract class NdefReaderActivity extends NfcReaderActivity<NdefMessage> 
      * 
      * @see NdefRecord#RTD_TEXT
      */
-    public static final String      RTD_TEXT              = "T"; //$NON-NLS-1$
+    public static final String      RTD_TEXT              = "T";                         //$NON-NLS-1$
 
     /**
      * NDEF RTD for URI records
      * 
      * @see NdefRecord#RTD_URI
      */
-    public static final String      RTD_URI               = "U"; //$NON-NLS-1$
+    public static final String      RTD_URI               = "U";                         //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 0
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_00         = "";                          //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 1
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_01         = "http://www.";               //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 2
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_02         = "https://www.";              //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 3
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_03         = "http://";                   //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 4
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_04         = "https://";                  //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 5
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_05         = "tel:";                      //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 6
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_06         = "mailto:";                   //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 7
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_07         = "ftp://anonymous:anonymous@"; //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 8
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_08         = "ftp://ftp.";                //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 9
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_09         = "ftps://";                   //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 10
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_10         = "sftp://";                   //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 11
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_11         = "smb://";                    //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 12
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_12         = "nfs://";                    //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 13
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_13         = "ftp://";                    //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 14
+     */
+    protected static final String   URI_PREFIX_14         = "dav://";                    //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 15
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_15         = "news:";                     //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 16
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_16         = "telnet://";                 //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 17
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_17         = "imap:";                     //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 18
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_18         = "rtsp://";                   //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 19
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_19         = "urn:";                      //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 20
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_20         = "pop:";                      //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 21
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_21         = "sip:";                      //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 22
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_22         = "sips:";                     //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 23
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_23         = "tftp:";                     //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 24
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_24         = "btspp://";                  //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 25
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_25         = "btl2cap://";                //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 26
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_26         = "btgoep://";                 //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 27
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_27         = "tcpobex://";                //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 28
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_28         = "irdaobex://";               //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 29
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_29         = "file://";                   //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 30
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_30         = "urn:epc:id:";               //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 31
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_31         = "urn:epc:tag:";              //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 32
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_32         = "urn:epc:pat:";              //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 33
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_33         = "urn:epc:raw:";              //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 34
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_34         = "urn:epc:";                  //$NON-NLS-1$
+
+    /**
+     * URI prefix for "U" records with code byte 35
+     * 
+     * @see #WELL_KNOWN_URI_PREFIX
+     */
+    protected static final String   URI_PREFIX_35         = "urn:nfc:";                  //$NON-NLS-1$
 
     /**
      * Strings to prepend to the URI in a NDEF "well known URI" record.
@@ -61,121 +311,22 @@ public abstract class NdefReaderActivity extends NfcReaderActivity<NdefMessage> 
      * 
      * <p>
      * The number and order of the entries in this array must match the values
-     * that appear as the first byte in the payload of such records
+     * that appear as the first byte in the payload of such records as laid out
+     * in the NDEF format specifcation documents.
      * </p>
      * 
      * @see #decodeUri(byte[])
      */
-    @SuppressWarnings("nls")
-    protected static final String[] WELL_KNOWN_URI_PREFIX = {
-
-                                                          // 0
-            "",
-
-            // 1
-            "http://www.",
-
-            // 2
-            "https://www.",
-
-            // 3
-            "http://",
-
-            // 4
-            "https://",
-
-            // 5
-            "tel:",
-
-            // 6
-            "mailto:",
-
-            // 7
-            "ftp://anonymous:anonymous@",
-
-            // 8
-            "ftp://ftp.",
-
-            // 9
-            "ftps://",
-
-            // 10
-            "sftp://",
-
-            // 11
-            "smb://",
-
-            // 12
-            "nfs://",
-
-            // 13
-            "ftp://",
-
-            // 14
-            "dav://",
-
-            // 15
-            "news:",
-
-            // 16
-            "telnet://",
-
-            // 17
-            "imap:",
-
-            // 18
-            "rtsp://",
-
-            // 19
-            "urn:",
-
-            // 20
-            "pop:",
-
-            // 21
-            "sip:",
-
-            // 22
-            "sips:",
-
-            // 23
-            "tftp:",
-
-            // 24
-            "btspp://",
-
-            // 25
-            "btl2cap://",
-
-            // 26
-            "btgoep://",
-
-            // 27
-            "tcpobex://",
-
-            // 28
-            "irdaobex://",
-
-            // 29
-            "file://",
-
-            // 30
-            "urn:epc:id:",
-
-            // 31
-            "urn:epc:tag:",
-
-            // 32
-            "urn:epc:pat:",
-
-            // 33
-            "urn:epc:raw:",
-
-            // 34
-            "urn:epc:",
-
-            // 35
-            "urn:nfc:"
+    protected static final String[] WELL_KNOWN_URI_PREFIX = { URI_PREFIX_00,
+            URI_PREFIX_01, URI_PREFIX_02, URI_PREFIX_03, URI_PREFIX_04,
+            URI_PREFIX_05, URI_PREFIX_06, URI_PREFIX_07, URI_PREFIX_08,
+            URI_PREFIX_09, URI_PREFIX_10, URI_PREFIX_11, URI_PREFIX_12,
+            URI_PREFIX_13, URI_PREFIX_14, URI_PREFIX_15, URI_PREFIX_16,
+            URI_PREFIX_17, URI_PREFIX_18, URI_PREFIX_19, URI_PREFIX_20,
+            URI_PREFIX_21, URI_PREFIX_22, URI_PREFIX_23, URI_PREFIX_24,
+            URI_PREFIX_25, URI_PREFIX_26, URI_PREFIX_27, URI_PREFIX_28,
+            URI_PREFIX_29, URI_PREFIX_30, URI_PREFIX_31, URI_PREFIX_32,
+            URI_PREFIX_33, URI_PREFIX_34, URI_PREFIX_35
 
                                                           };
 
@@ -403,7 +554,7 @@ public abstract class NdefReaderActivity extends NfcReaderActivity<NdefMessage> 
      * @return the {@link IntentFilter} array
      */
     @Override
-    public final IntentFilter[] createNfcIntentFilters() {
+    protected final IntentFilter[] createNfcIntentFilters() {
 
         IntentFilter ndefFilter = new IntentFilter(
                 NfcAdapter.ACTION_NDEF_DISCOVERED);
@@ -417,8 +568,23 @@ public abstract class NdefReaderActivity extends NfcReaderActivity<NdefMessage> 
      * Return the {@link NdefMessage} contained in the given {@link Tag} or
      * <code>null</code>
      * 
+     * <p>
      * This will return <code>null</code> if the {@link Tag} isn't NDEF
-     * formatted or is empty.
+     * formatted, is empty or an error is encountered while reading it.
+     * </p>
+     * 
+     * <p>
+     * Note that this implementation is deliberately <em>not</em> declared to be
+     * <code>final</code>. While this is a slightly weaker expression of
+     * object-oriented design than is often wise, it is done so as to give
+     * {@link NdefWriterActivity} the freedom it needs to modify the contents of
+     * the {@link Tag} in addition to merely reading from it. I.e.this is a case
+     * proving that "all methods / classes should be either <code>final</code>
+     * or <code>abstract</code>" is a guideline rather than a hard-and-fast
+     * rule. Of course, this "defect" could have been easily avoided using a
+     * "mix-in" style of object-oriented design, but that is not possible given
+     * Java's single-inheritance semantics.
+     * </p>
      * 
      * @param tag
      *            the {@link Tag}
@@ -471,11 +637,12 @@ public abstract class NdefReaderActivity extends NfcReaderActivity<NdefMessage> 
 
         } catch (Exception e) {
 
-            Log.e(NdefReaderActivity.class.getName(), "error processing tag", e); //$NON-NLS-1$
+            Log.e(NdefReaderActivity.class.getName(),
+                    "error reading NDEF message from tag", e); //$NON-NLS-1$
 
             if (getLastStatus() == null) {
 
-                setLastStatus(e.getMessage());
+                setLastStatus(getString(R.string.error_reading_ndef_message));
 
             }
 

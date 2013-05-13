@@ -7,24 +7,45 @@
  * 
  * <p>
  * Classes that extend {@link us.rader.nfc.NfcReaderActivity} directly or
- * indirectly inherit implementations of {@link android.app.Activity#onPause()} ,
- * {@link android.app.Activity#onResume()} and
- * {@link android.app.Activity#onNewIntent(android.content.Intent)} that work
- * together in conjunction with the foreground dispatch mechanism for accessing
- * the contents of a {@link android.nfc.Tag}. Such classes must provide implementations
- * of two <code>abstract</code> methods,
- * {@link us.rader.nfc.NfcReaderActivity#processTag(android.nfc.Tag)} and
- * {@link us.rader.nfc.NfcReaderActivity#onTagProcessed(android.os.Parcelable)}
+ * indirectly inherit <code>final</code> implementations of
+ * </p>
+ * 
+ * <ul>
+ * 
+ * <li> {@link us.rader.nfc.NfcReaderActivity#onPause()}
+ * 
+ * <li> {@link us.rader.nfc.NfcReaderActivity#onResume()}
+ * 
+ * <li> {@link us.rader.nfc.NfcReaderActivity#onNewIntent(android.content.Intent)}
+ * 
+ * </ul>
+ * 
+ * <p>
+ * that work together and in conjunction with the foreground dispatch mechanism
+ * for accessing the contents of a {@link android.nfc.Tag}. Such classes must
+ * provide implementations of three <code>abstract</code> methods
+ * </p>
+ * 
+ * <ul>
+ * 
+ * <li> {@link us.rader.nfc.NfcReaderActivity#createNfcIntentFilters()}
+ * 
+ * <li> {@link us.rader.nfc.NfcReaderActivity#processTag(android.nfc.Tag)}
+ * 
+ * <li> {@link us.rader.nfc.NfcReaderActivity#onTagProcessed(java.lang.Object)}
+ * 
+ * </ul>
+ * 
+ * <p>
+ * That are called at the correct points in the {@link android.app.Activity} and on
+ * appropriate threads.
  * </p>
  * 
  * <p>
  * Note that the generic parameter type for {@link us.rader.nfc.NfcReaderActivity}
  * is declared to be the type returned by
  * {@link us.rader.nfc.NfcReaderActivity#processTag(android.nfc.Tag)} and expected by
- * {@link us.rader.nfc.NfcReaderActivity#onTagProcessed(android.os.Parcelable)} .
- * It is constrained to extend {@link android.os.Parcelable} in the expectation that
- * such objects will be passed from one {@link android.app.Activity} to another as
- * {@link android.content.Intent} "extras."
+ * {@link us.rader.nfc.NfcReaderActivity#onTagProcessed(java.lang.Object)}
  * </p>
  * 
  * @see us.rader.nfc.NfcReaderActivity

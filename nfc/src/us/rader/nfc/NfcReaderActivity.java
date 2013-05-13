@@ -8,8 +8,6 @@ import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.util.Log;
 
 /**
@@ -30,10 +28,7 @@ import android.util.Log;
  * <p>
  * The generic parameter, <code>ContentType</code>, is declared as the type
  * returned by {@link #processTag(Tag)} and expected by
- * {@link #onTagProcessed(Parcelable)} . It is constrained to extend
- * {@link Parcelable} so that such values can be easily passed from one
- * {@link Activity} to another as {@link Intent} extras and similar facilities
- * that require marshaling and un-marshaling via a {@link Parcel}.
+ * {@link #onTagProcessed(Object)}
  * </p>
  * 
  * <p>
@@ -44,22 +39,30 @@ import android.util.Log;
  * extending this class directly.
  * </p>
  * 
+ * <p>
+ * Note that almost all of the methods of this class are declared to be either
+ * <code>final</code> or <code>abstract</code>. This should be regarded as a
+ * feature of good object-oriented design. The goal is to provide functionality
+ * to derived classes in a way that is not easily subverted, whether
+ * accidentally or deliberately, by the authors of those descendant classes.
+ * </p>
+ * 
  * @param <ContentType>
  *            the type of result to return from {@link #processTag(Tag)}
  * 
+ * @see #createNfcIntentFilters()
  * @see #processTag(Tag)
- * @see #onTagProcessed(Parcelable)
+ * @see #onTagProcessed(Object)
  * @see NdefReaderActivity
  * @see NdefWriterActivity
  * 
  * @author Kirk
  */
-public abstract class NfcReaderActivity<ContentType extends Parcelable> extends
-        Activity {
+public abstract class NfcReaderActivity<ContentType> extends Activity {
 
     /**
      * Invoke {@Link NfcReaderActivity#processTag(Tag)} and {@Link
-     *  NfcReaderActivity#onTagProcessed(Parcelable)} asynchronously
+     *  NfcReaderActivity#onTagProcessed(Object)} asynchronously
      * 
      * Much of the NFC related API must be invoked on a worker thread separate
      * from the main UI thread, and yet the app also must be able to update the
@@ -68,7 +71,7 @@ public abstract class NfcReaderActivity<ContentType extends Parcelable> extends
      * appropriate threads.
      * 
      * @see NfcReaderActivity#processTag(Tag)
-     * @see NfcReaderActivity#onTagProcessed(Parcelable)
+     * @see NfcReaderActivity#onTagProcessed(Object)
      * 
      * @author Kirk
      */
@@ -111,7 +114,7 @@ public abstract class NfcReaderActivity<ContentType extends Parcelable> extends
         }
 
         /**
-         * Invoke {@link NfcReaderActivity#onTagProcessed(Parcelable)} on the UI
+         * Invoke {@link NfcReaderActivity#onTagProcessed(Object)} on the UI
          * thread
          * 
          * @param result
@@ -120,7 +123,7 @@ public abstract class NfcReaderActivity<ContentType extends Parcelable> extends
          * 
          * @see AsyncTask#onPostExecute(Object)
          * @see NfcReaderActivity#processTag(Tag)
-         * @see NfcReaderActivity#onTagProcessed(Parcelable)
+         * @see NfcReaderActivity#onTagProcessed(Object)
          */
         @Override
         protected void onPostExecute(ContentType result) {
@@ -182,14 +185,6 @@ public abstract class NfcReaderActivity<ContentType extends Parcelable> extends
     }
 
     /**
-     * Create the {@link IntentFilter} array to use when enabling foreground
-     * dispatch
-     * 
-     * @return the {@link IntentFilter} array
-     */
-    public abstract IntentFilter[] createNfcIntentFilters();
-
-    /**
      * Status message or <code>null</code> if no errors occurred during most
      * recent invocation of {@link #processTag(Tag)}
      * 
@@ -202,16 +197,12 @@ public abstract class NfcReaderActivity<ContentType extends Parcelable> extends
     }
 
     /**
-     * Set {@link #lastStatus} to the given value
+     * Create the {@link IntentFilter} array to use when enabling foreground
+     * dispatch
      * 
-     * @param lastStatus
-     *            the new value for {@link #lastStatus}
+     * @return the {@link IntentFilter} array
      */
-    public final void setLastStatus(String lastStatus) {
-
-        this.lastStatus = lastStatus;
-
-    }
+    protected abstract IntentFilter[] createNfcIntentFilters();
 
     /**
      * Initialize the data structures used in conjunction with the foreground
@@ -316,8 +307,8 @@ public abstract class NfcReaderActivity<ContentType extends Parcelable> extends
      * This method exists separately from {@link #processTag(Tag)} because of
      * the different contexts in which they are invoked. Specifically,
      * {@link #processTag(Tag)} is invoked in a worker thread as required by
-     * most of the NFC API, while {@link #onTagProcessed(Parcelable)} is invoked
-     * in the UI thread
+     * most of the NFC API, while {@link #onTagProcessed(Object)} is invoked in
+     * the UI thread
      * 
      * @param result
      *            the value returned by {@link #processTag(Tag)}
@@ -339,5 +330,17 @@ public abstract class NfcReaderActivity<ContentType extends Parcelable> extends
      *         processed the {@link Tag}
      */
     protected abstract ContentType processTag(Tag tag);
+
+    /**
+     * Set {@link #lastStatus} to the given value
+     * 
+     * @param lastStatus
+     *            the new value for {@link #lastStatus}
+     */
+    protected final void setLastStatus(String lastStatus) {
+
+        this.lastStatus = lastStatus;
+
+    }
 
 }
