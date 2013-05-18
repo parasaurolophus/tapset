@@ -17,6 +17,7 @@ package us.rader.tapset;
 
 import java.io.Serializable;
 
+import us.rader.nfc.NdefRecordUtilities;
 import us.rader.nfc.NdefWriterActivity;
 import us.rader.nfc.ProcessTagOutcome;
 import android.annotation.SuppressLint;
@@ -106,7 +107,7 @@ public final class WriteTagActivity extends NdefWriterActivity {
 
         Intent intent = getIntent();
         Uri uri = intent.getData();
-        NdefRecord record = createUri(uri);
+        NdefRecord record = NdefRecordUtilities.createUri(uri);
         return new NdefMessage(new NdefRecord[] { record });
 
     }

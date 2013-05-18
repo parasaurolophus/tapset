@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import us.rader.nfc.NdefRecordUtilities;
 import us.rader.nfc.NdefWriterActivity;
 import us.rader.nfc.ProcessTagOutcome;
 import android.app.Activity;
@@ -165,11 +166,11 @@ public class MainActivity extends NdefWriterActivity {
     protected NdefMessage createNdefMessage(NdefMessage currentContents) {
 
         ArrayList<NdefRecord> records = new ArrayList<NdefRecord>();
-        records.add(createText("some text", "en")); //$NON-NLS-1$//$NON-NLS-2$
+        records.add(NdefRecordUtilities.createText("some text", "en")); //$NON-NLS-1$//$NON-NLS-2$
 
         try {
 
-            records.add(createMime("text/plain", //$NON-NLS-1$
+            records.add(NdefRecordUtilities.createMime("text/plain", //$NON-NLS-1$
                     "some more text".getBytes("UTF-8"))); //$NON-NLS-1$//$NON-NLS-2$
 
         } catch (UnsupportedEncodingException e) {
@@ -178,10 +179,10 @@ public class MainActivity extends NdefWriterActivity {
 
         }
 
-        records.add(createExternal("rader.us", "nfctest", //$NON-NLS-1$//$NON-NLS-2$
+        records.add(NdefRecordUtilities.createExternal("rader.us", "nfctest", //$NON-NLS-1$//$NON-NLS-2$
                 new byte[] { 0, 1, 2 }));
-        records.add(createUri("https://www.rader.us/")); //$NON-NLS-1$
-        records.add(createUri("nfctest://www.rader.us/")); //$NON-NLS-1$
+        records.add(NdefRecordUtilities.createUri("https://www.rader.us/")); //$NON-NLS-1$
+        records.add(NdefRecordUtilities.createUri("nfctest://www.rader.us/")); //$NON-NLS-1$
         return new NdefMessage(records.toArray(new NdefRecord[records.size()]));
 
     }
@@ -230,7 +231,7 @@ public class MainActivity extends NdefWriterActivity {
                     map.put(KEY_TNF, Short.toString(record.getTnf()));
                     map.put(KEY_TYPE, new String(record.getType(), "US-ASCII")); //$NON-NLS-1$
                     map.put(KEY_PAYLOAD, decodeRawPayload(record));
-                    String content = decodePayload(record);
+                    String content = NdefRecordUtilities.decodePayload(record);
 
                     if (content == null) {
 

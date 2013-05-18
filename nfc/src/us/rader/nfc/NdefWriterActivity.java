@@ -16,13 +16,10 @@
 package us.rader.nfc;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 import android.app.Activity;
-import android.net.Uri;
 import android.nfc.FormatException;
 import android.nfc.NdefMessage;
-import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.Ndef;
@@ -80,9 +77,9 @@ import android.util.Log;
  * relationship is reinforced by the tightly coupled semantics of some of the
  * helper data structures and methods of both classes, e.g. the inverse
  * relationships between and common use of
- * {@link NdefReaderActivity#WELL_KNOWN_URI_PREFIX} by both
- * {@link NdefReaderActivity#decodeUri(byte[])} and {@link #createUri(String)}
- * and so on. So there! :-)
+ * {@link NdefRecordUtilities#WELL_KNOWN_URI_PREFIX} by both
+ * {@link NdefRecordUtilities#decodeUri(byte[])} and
+ * {@link NdefRecordUtilities#createUri(String)} and so on. So there! :-)
  * </p>
  * 
  * @see #createNdefMessage(NdefMessage)
@@ -91,175 +88,6 @@ import android.util.Log;
  * @author Kirk
  */
 public abstract class NdefWriterActivity extends NdefReaderActivity {
-
-    /**
-     * Create an "external" NDEF record
-     * 
-     * @param domainName
-     *            the domain name to prepend to the external type string
-     * 
-     * @param type
-     *            the external type string
-     * 
-     * @param payload
-     *            the record payload
-     * 
-     * @return the {@link NdefRecord} or <code>null</code> if an error occurs
-     */
-    public static NdefRecord createExternal(String domainName, String type,
-            byte[] payload) {
-
-        try {
-
-            byte[] external = (domainName + ":" + type).getBytes("UTF-8"); //$NON-NLS-1$ //$NON-NLS-2$
-            return new NdefRecord(NdefRecord.TNF_EXTERNAL_TYPE, external, null,
-                    payload);
-
-        } catch (Exception e) {
-
-            Log.e(NdefWriterActivity.class.getName(),
-                    "error encoding external type", e); //$NON-NLS-1$
-            return null;
-
-        }
-    }
-
-    /**
-     * Create a NDEF MIME media message
-     * 
-     * @param type
-     *            the MIME type
-     * 
-     * @param payload
-     *            the payload bytes
-     * 
-     * @return the {@link NdefRecord}
-     */
-    public static NdefRecord createMime(String type, byte[] payload) {
-
-        try {
-
-            byte[] bytes = type.getBytes("US-ASCII"); //$NON-NLS-1$
-            return new NdefRecord(NdefRecord.TNF_MIME_MEDIA, bytes, null,
-                    payload);
-
-        } catch (UnsupportedEncodingException e) {
-
-            throw new IllegalArgumentException(e);
-
-        }
-
-    }
-
-    /**
-     * Create a NDEF "T" record
-     * 
-     * Note that this implementation only supports text strings that can be
-     * encoded using UTF-8 even though the NDEF spec support UTF-16, as well
-     * 
-     * @param text
-     *            the text string
-     * 
-     * @param language
-     *            the language code ("en," "fr" etc.)
-     * 
-     * @return the {@link NdefRecord}
-     */
-    public static NdefRecord createText(String text, String language) {
-
-        try {
-
-            byte[] languageBytes = language.getBytes("UTF-8"); //$NON-NLS-1$
-
-            if (languageBytes.length >= 32) {
-
-                throw new IllegalArgumentException(
-                        "maximim language code length exceeded"); //$NON-NLS-1$
-
-            }
-
-            byte[] textBytes = text.getBytes("UTF-8"); //$NON-NLS-1$
-            int textStart = languageBytes.length + 1;
-            int length = textBytes.length + textStart;
-            byte[] payload = new byte[length];
-            payload[0] = (byte) languageBytes.length;
-            System.arraycopy(languageBytes, 0, payload, 1, languageBytes.length);
-            System.arraycopy(textBytes, 0, payload, textStart, textBytes.length);
-            return new NdefRecord(NdefRecord.TNF_WELL_KNOWN,
-                    NdefRecord.RTD_TEXT, null, payload);
-
-        } catch (UnsupportedEncodingException e) {
-
-            throw new IllegalArgumentException(e);
-
-        }
-
-    }
-
-    /**
-     * Create a NDEF "U" record for the given string
-     * 
-     * @param uri
-     *            the string
-     * 
-     * @return the {@link NdefRecord}
-     * 
-     * @see #createUri(Uri)
-     */
-    public static NdefRecord createUri(String uri) {
-
-        try {
-
-            byte code = 0;
-            String prefix = ""; //$NON-NLS-1$
-
-            for (byte index = 1; index < WELL_KNOWN_URI_PREFIX.length; ++index) {
-
-                if (uri.startsWith(WELL_KNOWN_URI_PREFIX[index])) {
-
-                    code = index;
-                    prefix = WELL_KNOWN_URI_PREFIX[index];
-
-                }
-            }
-
-            int prefixLength = prefix.length();
-
-            if (prefixLength > 0) {
-
-                uri = uri.substring(prefixLength);
-
-            }
-
-            byte[] bytes = uri.getBytes("UTF-8"); //$NON-NLS-1$
-            byte[] payload = new byte[bytes.length + 1];
-            payload[0] = code;
-            System.arraycopy(bytes, 0, payload, 1, bytes.length);
-            return new NdefRecord(NdefRecord.TNF_WELL_KNOWN,
-                    NdefRecord.RTD_URI, null, payload);
-
-        } catch (UnsupportedEncodingException e) {
-
-            throw new IllegalArgumentException(e);
-
-        }
-    }
-
-    /**
-     * Create a NDEF "U" record for the given {@link Uri}
-     * 
-     * @param uri
-     *            the {@link Uri}
-     * 
-     * @return the {@link NdefRecord}
-     * 
-     * @see #createUri(String)
-     */
-    public static NdefRecord createUri(Uri uri) {
-
-        return createUri(uri.toString());
-
-    }
 
     /**
      * If <code>true</code> attempt to mark the {@link Tag} read-only after
