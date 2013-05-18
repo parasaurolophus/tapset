@@ -47,7 +47,8 @@ import android.widget.Toast;
 public class MainActivity extends NdefWriterActivity {
 
     /**
-     * Helper used by {@link MainActivity#onTagProcessed(NdefMessage)} to
+     * Helper used by
+     * {@link MainActivity#onTagProcessed(NdefMessage, ProcessTagOutcome)} to
      * populate a {@link ListView}
      * 
      * @author Kirk
@@ -255,8 +256,8 @@ public class MainActivity extends NdefWriterActivity {
 
     /**
      * Return either the result of reading the given {@link Tag} or of writing
-     * the value returned by {@link #createNdefMessage(Ndef)} depending on the
-     * selected test mode
+     * the value returned by {@link #createNdefMessage(NdefMessage)} depending
+     * on the selected test mode
      */
     @Override
     protected NdefMessage processTag(Tag tag, ProcessTagTask task) {

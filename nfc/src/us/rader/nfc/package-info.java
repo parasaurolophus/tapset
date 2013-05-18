@@ -45,7 +45,7 @@
  * 
  * <li> {@link us.rader.nfc.ForegroundDispatchActivity#createNfcIntentFilters()}
  * 
- * <li> {@link us.rader.nfc.ForegroundDispatchActivity#processTag(android.nfc.Tag, ProcessTagTask)}
+ * <li> {@link us.rader.nfc.ForegroundDispatchActivity#processTag(android.nfc.Tag, us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)}
  * 
  * <li> {@link us.rader.nfc.ForegroundDispatchActivity#onTagProcessed(java.lang.Object, ProcessTagOutcome)}
  * 
@@ -59,7 +59,7 @@
  * <p>
  * Note that the generic parameter type for {@link us.rader.nfc.ForegroundDispatchActivity}
  * is declared to be the type returned by
- * {@link us.rader.nfc.ForegroundDispatchActivity#processTag(android.nfc.Tag, ProcessTagTask)} and expected by
+ * {@link us.rader.nfc.ForegroundDispatchActivity#processTag(android.nfc.Tag, us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)} and expected by
  * {@link us.rader.nfc.ForegroundDispatchActivity#onTagProcessed(java.lang.Object, ProcessTagOutcome)}
  * </p>
  * 

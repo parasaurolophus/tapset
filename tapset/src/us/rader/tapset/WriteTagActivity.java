@@ -27,7 +27,6 @@ import android.net.Uri;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.Tag;
-import android.nfc.tech.Ndef;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
@@ -83,10 +82,11 @@ public final class WriteTagActivity extends NdefWriterActivity {
                 NavUtils.navigateUpFromSameTask(this);
                 return true;
 
+            default:
+
+                return super.onOptionsItemSelected(item);
+
         }
-
-        return super.onOptionsItemSelected(item);
-
     }
 
     /**
@@ -99,7 +99,7 @@ public final class WriteTagActivity extends NdefWriterActivity {
      * 
      * @return the {@link NdefMessage} for the requested {@link Uri}
      * 
-     * @see NdefWriterActivity#createNdefMessage(Ndef)
+     * @see NdefWriterActivity#createNdefMessage(NdefMessage)
      */
     @Override
     protected NdefMessage createNdefMessage(NdefMessage currentContents) {

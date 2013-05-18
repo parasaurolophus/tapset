@@ -167,10 +167,11 @@ public class ShowQrCodeActivity extends Activity {
                 NavUtils.navigateUpFromSameTask(this);
                 return true;
 
+            default:
+
+                return super.onOptionsItemSelected(item);
+
         }
-
-        return super.onOptionsItemSelected(item);
-
     }
 
     /**

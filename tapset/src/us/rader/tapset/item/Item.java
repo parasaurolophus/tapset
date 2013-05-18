@@ -255,7 +255,7 @@ public abstract class Item<T> {
      * @return {@link #label}
      * 
      * @see #label
-     * @see #SettingsItem(Object, String)
+     * @see #Item(Object, String)
      */
     public final String getLabel() {
 
