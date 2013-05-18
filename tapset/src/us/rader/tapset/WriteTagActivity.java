@@ -46,14 +46,25 @@ public final class WriteTagActivity extends NdefWriterActivity {
      * {@link ProcessTagOutcome} parameter to
      * {@link #onTagProcessed(NdefMessage, ProcessTagOutcome)}
      */
-    public static final String EXTRA_OUTCOME = "us.rader.tapset.result"; //$NON-NLS-1$
+    public static final String               EXTRA_OUTCOME = "us.rader.tapset.result"; //$NON-NLS-1$
 
     /**
      * The {@link Intent#getParcelableExtra(String)} key used to convey the
      * scanned {@link NdefMessage} back to the {@link Activity} that started
      * this one
      */
-    public static final String EXTRA_RESULT  = "us.rader.tapset.result"; //$NON-NLS-1$
+    public static final String               EXTRA_RESULT  = "us.rader.tapset.result"; //$NON-NLS-1$
+
+    /**
+     * Cached reference to the {@link NdefRecordUtilities} singleton
+     */
+    private static final NdefRecordUtilities ndefRecordUtilities;
+
+    static {
+
+        ndefRecordUtilities = NdefRecordUtilities.getInstance();
+
+    }
 
     /**
      * Wizard-generated handler for an options {@link MenuItem}
@@ -107,7 +118,7 @@ public final class WriteTagActivity extends NdefWriterActivity {
 
         Intent intent = getIntent();
         Uri uri = intent.getData();
-        NdefRecord record = NdefRecordUtilities.createUri(uri);
+        NdefRecord record = ndefRecordUtilities.createUri(uri);
         return new NdefMessage(new NdefRecord[] { record });
 
     }

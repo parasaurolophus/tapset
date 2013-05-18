@@ -85,33 +85,43 @@ public class MainActivity extends NdefWriterActivity {
     /**
      * Key used to map the decoded content from a {@link NdefRecord}
      */
-    private static final String KEY_CONTENT = "CONTENT"; //$NON-NLS-1$
+    private static final String              KEY_CONTENT = "CONTENT"; //$NON-NLS-1$
 
     /**
      * Key used to map {@link NdefRecord#getPayload()}
      */
-    private static final String KEY_PAYLOAD = "PAYLOAD"; //$NON-NLS-1$
+    private static final String              KEY_PAYLOAD = "PAYLOAD"; //$NON-NLS-1$
 
     /**
      * Key used to map {@link NdefRecord#getTnf()}
      */
-    private static final String KEY_TNF     = "TNF";    //$NON-NLS-1$
+    private static final String              KEY_TNF     = "TNF";    //$NON-NLS-1$
 
     /**
      * Key used to map {@link NdefRecord#getType()}
      */
-    private static final String KEY_TYPE    = "TYPE";   //$NON-NLS-1$
+    private static final String              KEY_TYPE    = "TYPE";   //$NON-NLS-1$
+
+    /**
+     * Cached reference to the {@link NdefRecordUtilities} singleton
+     */
+    private static final NdefRecordUtilities ndefRecordUtilities;
+
+    static {
+
+        ndefRecordUtilities = NdefRecordUtilities.getInstance();
+    }
 
     /**
      * The {@link EditText} used to display the contents of a
      * {@link NdefMessage}
      */
-    private ListView            contentList;
+    private ListView                         contentList;
 
     /**
      * Perform write tests when <code>true</code>, read tests otherwise
      */
-    private boolean             writeMode;
+    private boolean                          writeMode;
 
     /**
      * Inflate the options {@link Menu}
@@ -166,11 +176,11 @@ public class MainActivity extends NdefWriterActivity {
     protected NdefMessage createNdefMessage(NdefMessage currentContents) {
 
         ArrayList<NdefRecord> records = new ArrayList<NdefRecord>();
-        records.add(NdefRecordUtilities.createText("some text", "en")); //$NON-NLS-1$//$NON-NLS-2$
+        records.add(ndefRecordUtilities.createText("some text", "en")); //$NON-NLS-1$//$NON-NLS-2$
 
         try {
 
-            records.add(NdefRecordUtilities.createMime("text/plain", //$NON-NLS-1$
+            records.add(ndefRecordUtilities.createMime("text/plain", //$NON-NLS-1$
                     "some more text".getBytes("UTF-8"))); //$NON-NLS-1$//$NON-NLS-2$
 
         } catch (UnsupportedEncodingException e) {
@@ -179,10 +189,10 @@ public class MainActivity extends NdefWriterActivity {
 
         }
 
-        records.add(NdefRecordUtilities.createExternal("rader.us", "nfctest", //$NON-NLS-1$//$NON-NLS-2$
+        records.add(ndefRecordUtilities.createExternal("rader.us", "nfctest", //$NON-NLS-1$//$NON-NLS-2$
                 new byte[] { 0, 1, 2 }));
-        records.add(NdefRecordUtilities.createUri("https://www.rader.us/")); //$NON-NLS-1$
-        records.add(NdefRecordUtilities.createUri("nfctest://www.rader.us/")); //$NON-NLS-1$
+        records.add(ndefRecordUtilities.createUri("https://www.rader.us/")); //$NON-NLS-1$
+        records.add(ndefRecordUtilities.createUri("nfctest://www.rader.us/")); //$NON-NLS-1$
         return new NdefMessage(records.toArray(new NdefRecord[records.size()]));
 
     }
@@ -231,7 +241,7 @@ public class MainActivity extends NdefWriterActivity {
                     map.put(KEY_TNF, Short.toString(record.getTnf()));
                     map.put(KEY_TYPE, new String(record.getType(), "US-ASCII")); //$NON-NLS-1$
                     map.put(KEY_PAYLOAD, decodeRawPayload(record));
-                    String content = NdefRecordUtilities.decodePayload(record);
+                    String content = ndefRecordUtilities.decodePayload(record);
 
                     if (content == null) {
 
