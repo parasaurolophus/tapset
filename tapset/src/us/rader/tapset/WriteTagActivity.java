@@ -41,18 +41,18 @@ import android.view.MenuItem;
 public final class WriteTagActivity extends NdefWriterActivity {
 
     /**
-     * The {@link Intent#getParcelableExtra(String)} key used to convey the
-     * scanned {@link NdefMessage} back to the {@link Activity} that started
-     * this one
-     */
-    public static final String  EXTRA_RESULT  = "us.rader.tapset.result"; //$NON-NLS-1$
-
-    /**
      * The {@link Intent#putExtra(String, Serializable)} key for the
      * {@link ProcessTagOutcome} parameter to
      * {@link #onTagProcessed(NdefMessage, ProcessTagOutcome)}
      */
-    private static final String EXTRA_OUTCOME = "us.rader.tapset.result"; //$NON-NLS-1$
+    public static final String EXTRA_OUTCOME = "us.rader.tapset.result"; //$NON-NLS-1$
+
+    /**
+     * The {@link Intent#getParcelableExtra(String)} key used to convey the
+     * scanned {@link NdefMessage} back to the {@link Activity} that started
+     * this one
+     */
+    public static final String EXTRA_RESULT  = "us.rader.tapset.result"; //$NON-NLS-1$
 
     /**
      * Wizard-generated handler for an options {@link MenuItem}
@@ -147,7 +147,6 @@ public final class WriteTagActivity extends NdefWriterActivity {
 
             Intent intent = new Intent();
             intent.putExtra(EXTRA_RESULT, result);
-            intent.putExtra(EXTRA_OUTCOME, outcome);
             setResult(RESULT_OK, intent);
 
         }

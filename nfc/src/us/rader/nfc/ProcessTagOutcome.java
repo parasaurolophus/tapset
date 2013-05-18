@@ -62,6 +62,6 @@ public enum ProcessTagOutcome {
      * The tag was empty when attempting to read, of an incompatible format type
      * when attempting write etc.
      */
-    UNSUPPORTED_TAG
+    UNSUPPORTED_TAG;
 
 }
