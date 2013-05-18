@@ -1,6 +1,5 @@
 /*
  * Copyright 2013 Kirk Rader
-
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,10 +11,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-
  */
 
-package us.rader.tapset.settingsitems;
+package us.rader.tapset.item;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -25,8 +23,8 @@ import java.util.Locale;
 import java.util.Map;
 
 import us.rader.tapset.R;
-import us.rader.tapset.SettingsItemDetailFragment;
-import us.rader.tapset.SettingsItemListFragment;
+import us.rader.tapset.ItemDetailFragment;
+import us.rader.tapset.ItemListFragment;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
@@ -46,18 +44,18 @@ import android.widget.Toast;
  * 
  * @author Kirk
  */
-public abstract class SettingsItem<T> {
+public abstract class Item<T> {
 
     /**
      * Global mapping from id strings to known instances of classes derived from
      * this one
      */
-    private static Map<String, SettingsItem<?>> settingsItemMap;
+    private static Map<String, Item<?>> settingsItemMap;
 
     /**
      * Ordered list of known instances of classes derived from this one
      */
-    private static List<SettingsItem<?>>        settingsItems;
+    private static List<Item<?>>        settingsItems;
 
     /**
      * Create the {@link Uri} representing the current state of all selected
@@ -72,7 +70,7 @@ public abstract class SettingsItem<T> {
 
         HashMap<String, Object> parameters = new HashMap<String, Object>();
 
-        for (SettingsItem<?> settingsItem : settingsItems) {
+        for (Item<?> settingsItem : settingsItems) {
 
             settingsItem.addParameters(context, parameters);
 
@@ -107,7 +105,7 @@ public abstract class SettingsItem<T> {
     }
 
     /**
-     * Return the {@link SettingsItem} instance with the specified id
+     * Return the {@link Item} instance with the specified id
      * 
      * @param id
      *            the item id
@@ -116,31 +114,31 @@ public abstract class SettingsItem<T> {
      * 
      * @see #getId()
      */
-    public static SettingsItem<?> getSettingsItem(String id) {
+    public static Item<?> getSettingsItem(String id) {
 
-        SettingsItem<?> settingsItem = settingsItemMap.get(id);
+        Item<?> settingsItem = settingsItemMap.get(id);
         return settingsItem;
 
     }
 
     /**
-     * Return the {@link List} of {@link SettingsItem} instances for all device
+     * Return the {@link List} of {@link Item} instances for all device
      * settings
      * 
      * Only valid after a call to {@link #initialize(Context)}
      * 
-     * @return all {@link SettingsItem} intances
+     * @return all {@link Item} intances
      * 
      * @see #initialize(Context)
      */
-    public static List<SettingsItem<?>> getSettingsItems() {
+    public static List<Item<?>> getSettingsItems() {
 
         return settingsItems;
 
     }
 
     /**
-     * Create the {@link SettingsItem} instances for all device settings
+     * Create the {@link Item} instances for all device settings
      * 
      * @param context
      *            the {@link Context}
@@ -149,8 +147,8 @@ public abstract class SettingsItem<T> {
      */
     public static void initialize(Context context) {
 
-        settingsItemMap = new HashMap<String, SettingsItem<?>>();
-        settingsItems = new ArrayList<SettingsItem<?>>();
+        settingsItemMap = new HashMap<String, Item<?>>();
+        settingsItems = new ArrayList<Item<?>>();
         addItem(new VolumeSettings(context));
         addItem(new RingtoneSettings(context));
 
@@ -168,7 +166,7 @@ public abstract class SettingsItem<T> {
      */
     public static void updateAllSettings(Context context, Uri uri) {
 
-        for (SettingsItem<?> item : settingsItems) {
+        for (Item<?> item : settingsItems) {
 
             item.updateSettings(context, uri);
 
@@ -181,15 +179,15 @@ public abstract class SettingsItem<T> {
     }
 
     /**
-     * Add the given {@link SettingsItem} to the global list
+     * Add the given {@link Item} to the global list
      * 
      * @param item
-     *            the {@link SettingsItem}
+     *            the {@link Item}
      * 
      * @see #getSettingsItems()
      * @see #getSettingsItem(String)
      */
-    private static void addItem(SettingsItem<?> item) {
+    private static void addItem(Item<?> item) {
 
         settingsItems.add(item);
         settingsItemMap.put(item.getId(), item);
@@ -203,7 +201,7 @@ public abstract class SettingsItem<T> {
     T               settingsModel;
 
     /**
-     * The label string for this {@link SettingsItem}
+     * The label string for this {@link Item}
      * 
      * @see #getLabel()
      */
@@ -228,7 +226,7 @@ public abstract class SettingsItem<T> {
      * @see #label
      * @see #getLabel()
      */
-    protected SettingsItem(T settingsModel, String label) {
+    protected Item(T settingsModel, String label) {
 
         this.settingsModel = settingsModel;
         this.label = label;
@@ -252,7 +250,7 @@ public abstract class SettingsItem<T> {
     /**
      * Return the label for this instance
      * 
-     * Used when constructing the {@link SettingsItemListFragment} UI
+     * Used when constructing the {@link ItemListFragment} UI
      * 
      * @return {@link #label}
      * 
@@ -269,7 +267,7 @@ public abstract class SettingsItem<T> {
      * Return the resource id of the {@link Layout} to use for this instance's
      * UI
      * 
-     * Used for the UI in {@link SettingsItemDetailFragment}
+     * Used for the UI in {@link ItemDetailFragment}
      * 
      * @return the {@link Layout} resource id
      */
@@ -286,7 +284,7 @@ public abstract class SettingsItem<T> {
 
         int position = 0;
 
-        for (SettingsItem<?> settingsItem : settingsItems) {
+        for (Item<?> settingsItem : settingsItems) {
 
             if (settingsItem == this) {
 
@@ -322,7 +320,7 @@ public abstract class SettingsItem<T> {
 
     /**
      * Override {@link Object#toString()} on behalf of {@link ArrayAdapter} used
-     * in {@link SettingsItemListFragment#onCreate(Bundle)}
+     * in {@link ItemListFragment#onCreate(Bundle)}
      */
     @Override
     public final String toString() {

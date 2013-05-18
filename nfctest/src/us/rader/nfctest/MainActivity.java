@@ -1,3 +1,18 @@
+/*
+ * Copyright 2013 Kirk Rader
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package us.rader.nfctest;
 
 import java.io.UnsupportedEncodingException;
@@ -8,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import us.rader.nfc.NdefWriterActivity;
+import us.rader.nfc.ProcessTagOutcome;
 import android.app.Activity;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
@@ -141,11 +157,11 @@ public class MainActivity extends NdefWriterActivity {
     /**
      * Create the {@link NdefMessage} to write for unit-test purposes
      * 
-     * @param ndef
+     * @param currentContents
      *            the {@link NdefMessage}
      */
     @Override
-    protected NdefMessage createNdefMessage(Ndef ndef) {
+    protected NdefMessage createNdefMessage(NdefMessage currentContents) {
 
         ArrayList<NdefRecord> records = new ArrayList<NdefRecord>();
         records.add(createText("some text", "en")); //$NON-NLS-1$//$NON-NLS-2$
@@ -190,9 +206,12 @@ public class MainActivity extends NdefWriterActivity {
      * 
      * @param message
      *            the {@link NdefMessage}
+     * 
+     * @param outcome
+     *            additional diagnostic information
      */
     @Override
-    protected void onTagProcessed(NdefMessage message) {
+    protected void onTagProcessed(NdefMessage message, ProcessTagOutcome outcome) {
 
         List<Map<String, String>> data = new LinkedList<Map<String, String>>();
         String[] from = new String[] { KEY_TNF, KEY_TYPE, KEY_PAYLOAD,
@@ -240,11 +259,11 @@ public class MainActivity extends NdefWriterActivity {
      * selected test mode
      */
     @Override
-    protected NdefMessage processTag(Tag tag) {
+    protected NdefMessage processTag(Tag tag, ProcessTagTask task) {
 
         if (writeMode) {
 
-            return super.processTag(tag);
+            return super.processTag(tag, task);
 
         }
 
@@ -253,10 +272,12 @@ public class MainActivity extends NdefWriterActivity {
         if (ndef == null) {
 
             display(getString(R.string.not_ndef));
+            task.setOutcome(ProcessTagOutcome.NOTHING_TO_DO);
             return null;
 
         }
 
+        task.setOutcome(ProcessTagOutcome.SUCCESSFUL_READ);
         return ndef.getCachedNdefMessage();
 
     }

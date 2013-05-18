@@ -1,6 +1,5 @@
 /*
  * Copyright 2013 Kirk Rader
-
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,12 +11,11 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-
  */
 
 package us.rader.tapset;
 
-import us.rader.tapset.settingsitems.SettingsItem;
+import us.rader.tapset.item.Item;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -39,20 +37,20 @@ import com.google.zxing.integration.android.IntentResult;
  * An activity representing a list of SettingsItems. This activity has different
  * presentations for handset and tablet-size devices. On handsets, the activity
  * presents a list of items, which when touched, lead to a
- * {@link SettingsItemDetailActivity} representing item details. On tablets, the
+ * {@link ItemDetailActivity} representing item details. On tablets, the
  * activity presents the list of items and item details side-by-side using two
  * vertical panes.
  * <p>
  * The activity makes heavy use of fragments. The list of items is a
- * {@link SettingsItemListFragment} and the item details (if present) is a
- * {@link SettingsItemDetailFragment}.
+ * {@link ItemListFragment} and the item details (if present) is a
+ * {@link ItemDetailFragment}.
  * <p>
  * This activity also implements the required
- * {@link SettingsItemListFragment.ItemSelectedListener} interface to listen for
+ * {@link ItemListFragment.ItemSelectedListener} interface to listen for
  * item selections.
  */
-public class SettingsItemListActivity extends FragmentActivity implements
-        SettingsItemListFragment.ItemSelectedListener {
+public class ItemListActivity extends FragmentActivity implements
+        ItemListFragment.ItemSelectedListener {
 
     /**
      * Request code when invoking {@link WriteTagActivity} in normal operating
@@ -160,7 +158,7 @@ public class SettingsItemListActivity extends FragmentActivity implements
     public static boolean showQrCode(Context context) {
 
         Intent intent = new Intent(ACTION_SHOW_QR,
-                SettingsItem.createUri(context), context,
+                Item.createUri(context), context,
                 ShowQrCodeActivity.class);
         context.startActivity(intent);
         return true;
@@ -187,7 +185,7 @@ public class SettingsItemListActivity extends FragmentActivity implements
 
         IntentResult intentResult = IntentIntegrator.parseActivityResult(
                 requestCode, resultCode, resultIntent);
-        SettingsItem.updateAllSettings(activity,
+        Item.updateAllSettings(activity,
                 Uri.parse(intentResult.getContents()));
 
     }
@@ -205,7 +203,7 @@ public class SettingsItemListActivity extends FragmentActivity implements
 
         Intent intent = new Intent(
                 "us.rader.tapset.writetag", //$NON-NLS-1$
-                SettingsItem.createUri(context), context,
+                Item.createUri(context), context,
                 WriteTagActivity.class);
         context.startActivityForResult(intent, REQUEST_CODE_WRITE_TAG);
         return true;
@@ -221,7 +219,7 @@ public class SettingsItemListActivity extends FragmentActivity implements
     /**
      * Initialize {@link #twoPane} to <code>false</code>
      */
-    public SettingsItemListActivity() {
+    public ItemListActivity() {
 
         twoPane = false;
 
@@ -248,7 +246,7 @@ public class SettingsItemListActivity extends FragmentActivity implements
 
     /**
      * Callback method from
-     * {@link SettingsItemListFragment.ItemSelectedListener} indicating that the
+     * {@link ItemListFragment.ItemSelectedListener} indicating that the
      * item with the given ID was selected.
      */
     @Override
@@ -260,8 +258,8 @@ public class SettingsItemListActivity extends FragmentActivity implements
             // adding or replacing the detail fragment using a
             // fragment transaction.
             Bundle arguments = new Bundle();
-            arguments.putString(SettingsItemDetailFragment.ARG_ITEM_ID, id);
-            SettingsItemDetailFragment fragment = new SettingsItemDetailFragment();
+            arguments.putString(ItemDetailFragment.ARG_ITEM_ID, id);
+            ItemDetailFragment fragment = new ItemDetailFragment();
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.settingsitem_detail_container, fragment)
@@ -272,8 +270,8 @@ public class SettingsItemListActivity extends FragmentActivity implements
             // In single-pane mode, simply start the detail activity
             // for the selected item ID.
             Intent detailIntent = new Intent(this,
-                    SettingsItemDetailActivity.class);
-            detailIntent.putExtra(SettingsItemDetailFragment.ARG_ITEM_ID, id);
+                    ItemDetailActivity.class);
+            detailIntent.putExtra(ItemDetailFragment.ARG_ITEM_ID, id);
             startActivity(detailIntent);
 
         }
@@ -323,7 +321,7 @@ public class SettingsItemListActivity extends FragmentActivity implements
      * This override uses
      * {@link IntentIntegrator#parseActivityResult(int, int, Intent)} to forward
      * the {@link Uri} from the result's {@link Intent#getData()} to
-     * {@link SettingsItem#updateAllSettings(Context, Uri)} on the assumption
+     * {@link Item#updateAllSettings(Context, Uri)} on the assumption
      * that the handler {@link Activity} was launched to scan a QR code
      * 
      * @param requestCode
@@ -339,7 +337,7 @@ public class SettingsItemListActivity extends FragmentActivity implements
      *            the result intent set by the handler {@link Activity} by
      *            {@link Activity#setResult(int, Intent)}
      * 
-     * @see SettingsItem#updateAllSettings(Context, Uri)
+     * @see Item#updateAllSettings(Context, Uri)
      * @see FragmentActivity#onActivityResult(int, int, Intent)
      */
     @Override
@@ -377,7 +375,7 @@ public class SettingsItemListActivity extends FragmentActivity implements
     }
 
     /**
-     * Prepare this {@link SettingsItemListActivity} to be displayed
+     * Prepare this {@link ItemListActivity} to be displayed
      * 
      * @param savedInstanceState
      *            persisted app state or <code>null</code>
@@ -388,7 +386,7 @@ public class SettingsItemListActivity extends FragmentActivity implements
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        SettingsItem.initialize(this);
+        Item.initialize(this);
         setContentView(R.layout.activity_settingsitem_list);
 
         if (findViewById(R.id.settingsitem_detail_container) != null) {
@@ -398,7 +396,7 @@ public class SettingsItemListActivity extends FragmentActivity implements
             // res/values-sw600dp). If this view is present, then the
             // activity should be in two-pane mode.
             twoPane = true;
-            SettingsItemListFragment settingsItemListFragment = (SettingsItemListFragment) getSupportFragmentManager()
+            ItemListFragment settingsItemListFragment = (ItemListFragment) getSupportFragmentManager()
                     .findFragmentById(R.id.settingsitem_list);
             settingsItemListFragment.setActivateOnItemClick(true);
 
@@ -412,7 +410,7 @@ public class SettingsItemListActivity extends FragmentActivity implements
 
             if (uri != null) {
 
-                SettingsItem.updateAllSettings(this, uri);
+                Item.updateAllSettings(this, uri);
 
             }
         }

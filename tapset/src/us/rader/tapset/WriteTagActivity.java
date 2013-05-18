@@ -1,6 +1,5 @@
 /*
  * Copyright 2013 Kirk Rader
-
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,13 +11,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-
  */
 
 package us.rader.tapset;
 
+import java.io.Serializable;
+
 import us.rader.nfc.NdefWriterActivity;
-import us.rader.nfc.NfcReaderActivity;
+import us.rader.nfc.ProcessTagOutcome;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -26,6 +26,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
+import android.nfc.Tag;
 import android.nfc.tech.Ndef;
 import android.os.Build;
 import android.os.Bundle;
@@ -41,11 +42,18 @@ import android.view.MenuItem;
 public final class WriteTagActivity extends NdefWriterActivity {
 
     /**
-     * The {@link Intent#getParcelableExtra(String)} key used to convery the
+     * The {@link Intent#getParcelableExtra(String)} key used to convey the
      * scanned {@link NdefMessage} back to the {@link Activity} that started
      * this one
      */
-    public static final String EXTRA_RESULT = "us.rader.tapset.result"; //$NON-NLS-1$
+    public static final String  EXTRA_RESULT  = "us.rader.tapset.result"; //$NON-NLS-1$
+
+    /**
+     * The {@link Intent#putExtra(String, Serializable)} key for the
+     * {@link ProcessTagOutcome} parameter to
+     * {@link #onTagProcessed(NdefMessage, ProcessTagOutcome)}
+     */
+    private static final String EXTRA_OUTCOME = "us.rader.tapset.result"; //$NON-NLS-1$
 
     /**
      * Wizard-generated handler for an options {@link MenuItem}
@@ -86,12 +94,15 @@ public final class WriteTagActivity extends NdefWriterActivity {
      * {@link Intent#getData()} for the {@link Intent} used to launch this
      * {@link WriteTagActivity}
      * 
+     * @param currentContents
+     *            current contents of the {@link Tag}
+     * 
      * @return the {@link NdefMessage} for the requested {@link Uri}
      * 
      * @see NdefWriterActivity#createNdefMessage(Ndef)
      */
     @Override
-    protected NdefMessage createNdefMessage(Ndef ndef) {
+    protected NdefMessage createNdefMessage(NdefMessage currentContents) {
 
         Intent intent = getIntent();
         Uri uri = intent.getData();
@@ -101,7 +112,7 @@ public final class WriteTagActivity extends NdefWriterActivity {
     }
 
     /**
-     * Helper used by {@link NfcReaderActivity#onCreate(Bundle)}
+     * Prepare this instance to be displayed
      * 
      * @param savedInstanceState
      *            persisted app state or <code>null</code>
@@ -121,9 +132,12 @@ public final class WriteTagActivity extends NdefWriterActivity {
      * 
      * @param result
      *            the {@link NdefMessage}
+     * 
+     * @param outcome
+     *            additional diagnostic infomration
      */
     @Override
-    protected void onTagProcessed(NdefMessage result) {
+    protected void onTagProcessed(NdefMessage result, ProcessTagOutcome outcome) {
 
         if (result == null) {
 
@@ -133,6 +147,7 @@ public final class WriteTagActivity extends NdefWriterActivity {
 
             Intent intent = new Intent();
             intent.putExtra(EXTRA_RESULT, result);
+            intent.putExtra(EXTRA_OUTCOME, outcome);
             setResult(RESULT_OK, intent);
 
         }

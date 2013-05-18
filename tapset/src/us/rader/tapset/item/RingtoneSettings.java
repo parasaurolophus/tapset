@@ -1,6 +1,5 @@
 /*
  * Copyright 2013 Kirk Rader
-
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,10 +11,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-
  */
 
-package us.rader.tapset.settingsitems;
+package us.rader.tapset.item;
 
 import java.util.Map;
 
@@ -31,13 +29,13 @@ import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 
 /**
- * {@link SettingsItem} for reading and writing {@link AudioManager} ringtone
+ * {@link Item} for reading and writing {@link AudioManager} ringtone
  * API's in NDEF tags
  * 
  * @author Kirk
  * 
  */
-class RingtoneSettings extends SettingsItem<RingtoneSettings.DummyManager> {
+class RingtoneSettings extends Item<RingtoneSettings.DummyManager> {
 
     /**
      * Dummy settings model to conform to generic parent class, for a settings
@@ -158,7 +156,7 @@ class RingtoneSettings extends SettingsItem<RingtoneSettings.DummyManager> {
      * 
      * @return the resource id
      * 
-     * @see SettingsItem#getLayoutResource()
+     * @see Item#getLayoutResource()
      */
     @Override
     public int getLayoutResource() {
@@ -177,7 +175,7 @@ class RingtoneSettings extends SettingsItem<RingtoneSettings.DummyManager> {
      * @param parameters
      *            the parameters {@link Map}
      * 
-     * @see SettingsItem#addParameters(Context, Map)
+     * @see Item#addParameters(Context, Map)
      */
     @Override
     protected void addParameters(Context context, Map<String, Object> parameters) {
@@ -216,7 +214,7 @@ class RingtoneSettings extends SettingsItem<RingtoneSettings.DummyManager> {
      * @param settingsView
      *            the {@link View}
      * 
-     * @see SettingsItem#setView(Context, View)
+     * @see Item#setView(Context, View)
      */
     @Override
     protected boolean initializeUi(Context context, View settingsView) {
@@ -248,7 +246,7 @@ class RingtoneSettings extends SettingsItem<RingtoneSettings.DummyManager> {
      * @param uri
      *            the {@link Uri}
      * 
-     * @see SettingsItem#updateSettings(Context, Uri)
+     * @see Item#updateSettings(Context, Uri)
      */
     @Override
     protected void updateSettings(Context context, Uri uri) {

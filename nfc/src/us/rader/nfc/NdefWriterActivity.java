@@ -1,3 +1,18 @@
+/*
+ * Copyright 2013 Kirk Rader
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package us.rader.nfc;
 
 import java.io.IOException;
@@ -70,8 +85,8 @@ import android.util.Log;
  * and so on. So there! :-)
  * </p>
  * 
- * @see #createNdefMessage(Ndef)
- * @see #processTag(Tag)
+ * @see #createNdefMessage(NdefMessage)
+ * @see #processTag(Tag, us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)
  * 
  * @author Kirk
  */
@@ -248,11 +263,13 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
 
     /**
      * If <code>true</code> attempt to mark the {@link Tag} read-only after
-     * writing or while formatting in {@link #processTag(Tag)}
+     * writing or while formatting in
+     * {@link #processTag(Tag, us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)}
      * 
      * @see #isReadOnlyRequested()
      * @see #setReadonlyRequested(boolean)
-     * @see #processTag(Tag)
+     * @see #processTag(Tag,
+     *      us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)
      */
     private boolean readOnlyRequested;
 
@@ -287,7 +304,8 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
      * @return {@link #readOnlyRequested}
      * 
      * @see #setReadonlyRequested(boolean)
-     * @see #processTag(Tag)
+     * @see #processTag(Tag,
+     *      us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)
      */
     public final boolean isReadOnlyRequested() {
 
@@ -311,43 +329,44 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
     }
 
     /**
-     * Return the {@link NdefMessage} to write to the given {@link Ndef} tag
+     * Return the {@link NdefMessage} to write to a {@link Ndef} tag
      * 
-     * This method is passed the {@link Ndef} on the assumption that some
-     * (most?) app's might want to engage in a read-modify-write cycle with the
-     * NFC tags they use, rather than write only. In such cases, you can use the
-     * given object to obtain the current {@link NdefMessage}. But note that
-     * this will be <code>null</code> in cases where the given tag isn't yet
-     * NDEF formatted or is empty. Note also that the {@link Ndef}, if not
-     * <code>null</code> will also already be "connected" and will also be used
-     * to write the {@link NdefMessage} so you should call neither
-     * {@link Ndef#connect()} nor {@link Ndef#close()} here.
+     * {@link #processTag(Tag, us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)}
+     * will only attempt to modify the {@link Tag} if this method returns a
+     * non-null {@link NdefMessage}
      * 
-     * @param ndef
-     *            the {@link Ndef} object by which can read the current contents
-     *            of the tag or <code>null</code> if the tag isn't yet NDEF
-     *            formatted or is empty
+     * @param currentContents
+     *            the {@link NdefMessage} representing the current contents of a
+     *            {@link Tag} or <code>null</code> if {@link Tag} is empty
      * 
-     * @return the {@link NdefMessage}
+     * @return the given {@link NdefMessage} or a new one with which to replace
+     *         it
      * 
-     * @see #processTag(Tag)
+     * @see #processTag(Tag,
+     *      us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)
      */
-    protected abstract NdefMessage createNdefMessage(Ndef ndef);
+    protected abstract NdefMessage createNdefMessage(NdefMessage currentContents);
 
     /**
-     * Write the result of calling {@link #createNdefMessage(Ndef)} to the given
-     * {@link Tag}
+     * Write the result of calling {@link #createNdefMessage(NdefMessage)} to
+     * the given {@link Tag}
      * 
      * @param tag
      *            the {@link Tag}
      * 
+     * @param task
+     *            use {@link ProcessTagTask#setOutcome(ProcessTagOutcome)} to
+     *            provide additional diagnostic information to
+     *            {@link ForegroundDispatchActivity#onTagProcessed(Object, ProcessTagOutcome)}
+     * 
      * @return the {@link NdefMessage} that was written to the {@link Tag} or
      *         <code>null</code> if an error occurs
      * 
-     * @see us.rader.nfc.NdefReaderActivity#processTag(android.nfc.Tag)
+     * @see us.rader.nfc.NdefReaderActivity#processTag(android.nfc.Tag,
+     *      us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)
      */
     @Override
-    protected NdefMessage processTag(Tag tag) {
+    protected NdefMessage processTag(Tag tag, ProcessTagTask task) {
 
         try {
 
@@ -362,22 +381,16 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
                     return null;
                 }
 
-                return processNdefFormatable(formatable);
+                return processNdefFormatable(formatable, task);
 
             }
 
-            return processNdef(ndef);
+            return processNdef(ndef, task);
 
         } catch (Exception e) {
 
             Log.e(NdefWriterActivity.class.getName(), "error processing tag", e); //$NON-NLS-1$
-
-            if (getLastStatus() == null) {
-
-                setLastStatus(e.getMessage());
-
-            }
-
+            task.setOutcome(ProcessTagOutcome.TECHNOLOGY_ERROR);
             return null;
 
         }
@@ -385,10 +398,16 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
 
     /**
      * Write the result of passing the given {@link Ndef} instance to
-     * {@link #createNdefMessage(Ndef)} to the tag using that same {@link Ndef}
+     * {@link #createNdefMessage(NdefMessage)} to the tag using that same
+     * {@link Ndef}
      * 
      * @param ndef
      *            the {@Link Ndef} instance
+     * 
+     * @param task
+     *            use {@link ProcessTagTask#setOutcome(ProcessTagOutcome)} to
+     *            provide additional diagnostic information to
+     *            {@link ForegroundDispatchActivity#onTagProcessed(Object, ProcessTagOutcome)}
      * 
      * @return the {@link NdefMessage} that was written
      * 
@@ -398,30 +417,39 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
      * @throws FormatException
      *             if a NDEF format error occurs
      */
-    private NdefMessage processNdef(Ndef ndef) throws IOException,
-            FormatException {
+    private NdefMessage processNdef(Ndef ndef, ProcessTagTask task)
+            throws IOException, FormatException {
+
+        NdefMessage currentContents = ndef.getCachedNdefMessage();
+        NdefMessage message = createNdefMessage(currentContents);
+
+        if (message == null) {
+
+            task.setOutcome(ProcessTagOutcome.NOTHING_TO_DO);
+            return currentContents;
+
+        }
+
+        if (!ndef.isWritable()) {
+
+            task.setOutcome(ProcessTagOutcome.READ_ONLY_TAG);
+            return currentContents;
+
+        }
+
+        byte[] bytes = message.toByteArray();
+        int maxSize = ndef.getMaxSize();
+
+        if (bytes.length > maxSize) {
+
+            task.setOutcome(ProcessTagOutcome.TAG_SIZE_EXCEEDED);
+            return currentContents;
+
+        }
 
         ndef.connect();
 
         try {
-
-            if (!ndef.isWritable()) {
-
-                throw new IllegalStateException(
-                        getString(R.string.read_only_tag));
-
-            }
-
-            NdefMessage message = createNdefMessage(ndef);
-            byte[] bytes = message.toByteArray();
-            int maxSize = ndef.getMaxSize();
-
-            if (bytes.length > maxSize) {
-
-                throw new IllegalStateException(getString(
-                        R.string.tag_size_exceeded, bytes.length, maxSize));
-
-            }
 
             ndef.writeNdefMessage(message);
 
@@ -442,10 +470,16 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
 
     /**
      * Write the result of passing <code>null</code> to
-     * {@link #createNdefMessage(Ndef)} to the given {@link NdefFormatable}
+     * {@link #createNdefMessage(NdefMessage)} to the given
+     * {@link NdefFormatable}
      * 
      * @param formatable
      *            the {@Link NdefFormatable} instance
+     * 
+     * @param task
+     *            use {@link ProcessTagTask#setOutcome(ProcessTagOutcome)} to
+     *            provide additional diagnostic information to
+     *            {@link ForegroundDispatchActivity#onTagProcessed(Object, ProcessTagOutcome)}
      * 
      * @return the {@link NdefMessage} that was written
      * 
@@ -455,14 +489,21 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
      * @throws FormatException
      *             if a NDEF format error occurs
      */
-    private NdefMessage processNdefFormatable(NdefFormatable formatable)
-            throws IOException, FormatException {
+    private NdefMessage processNdefFormatable(NdefFormatable formatable,
+            ProcessTagTask task) throws IOException, FormatException {
 
         formatable.connect();
 
         try {
 
             NdefMessage message = createNdefMessage(null);
+
+            if (message == null) {
+
+                task.setOutcome(ProcessTagOutcome.NOTHING_TO_DO);
+                return null;
+
+            }
 
             if (readOnlyRequested) {
 
@@ -474,6 +515,7 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
 
             }
 
+            task.setOutcome(ProcessTagOutcome.SUCCESSFUL_WRITE);
             return message;
 
         } finally {

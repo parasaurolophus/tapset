@@ -1,6 +1,5 @@
 /*
  * Copyright 2013 Kirk Rader
-
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,12 +11,11 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-
  */
 
 package us.rader.tapset;
 
-import us.rader.tapset.settingsitems.SettingsItem;
+import us.rader.tapset.item.Item;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -32,12 +30,12 @@ import android.widget.ListView;
  * A list fragment representing a list of SettingsItems. This fragment also
  * supports tablet devices by allowing list items to be given an 'activated'
  * state upon selection. This helps indicate which item is currently being
- * viewed in a {@link SettingsItemDetailFragment}.
+ * viewed in a {@link ItemDetailFragment}.
  * <p>
  * Activities containing this fragment MUST implement the
  * {@link ItemSelectedListener} interface.
  */
-public class SettingsItemListFragment extends ListFragment {
+public class ItemListFragment extends ListFragment {
 
     /**
      * A callback interface that all activities containing this fragment must
@@ -50,7 +48,7 @@ public class SettingsItemListFragment extends ListFragment {
          * Callback for when an item has been selected.
          * 
          * @param id
-         *            the {@link SettingsItem} id of the selected item
+         *            the {@link Item} id of the selected item
          */
         public void onItemSelected(String id);
 
@@ -98,7 +96,7 @@ public class SettingsItemListFragment extends ListFragment {
     /**
      * Initialize this instance to its inactive state
      */
-    public SettingsItemListFragment() {
+    public ItemListFragment() {
 
         itemSelectedListener = dummyItemSelectedListener;
         activatedPosition = AdapterView.INVALID_POSITION;
@@ -106,7 +104,7 @@ public class SettingsItemListFragment extends ListFragment {
     }
 
     /**
-     * Attach this {@link SettingsItemListFragment} to the given
+     * Attach this {@link ItemListFragment} to the given
      * {@link Activity}
      * 
      * Note that the given {@link Activity} must implement
@@ -147,9 +145,9 @@ public class SettingsItemListFragment extends ListFragment {
     public void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        setListAdapter(new ArrayAdapter<SettingsItem<?>>(getActivity(),
+        setListAdapter(new ArrayAdapter<Item<?>>(getActivity(),
                 android.R.layout.simple_list_item_activated_1,
-                android.R.id.text1, SettingsItem.getSettingsItems()));
+                android.R.id.text1, Item.getSettingsItems()));
 
     }
 
@@ -190,7 +188,7 @@ public class SettingsItemListFragment extends ListFragment {
             long id) {
 
         super.onListItemClick(listView, view, position, id);
-        String settingsItemId = SettingsItem.getSettingsItems().get(position)
+        String settingsItemId = Item.getSettingsItems().get(position)
                 .getId();
         itemSelectedListener.onItemSelected(settingsItemId);
 
@@ -244,7 +242,7 @@ public class SettingsItemListFragment extends ListFragment {
     }
 
     /**
-     * Update the selected item in this {@link SettingsItemListFragment}
+     * Update the selected item in this {@link ItemListFragment}
      * 
      * @param position
      *            the newly activated position

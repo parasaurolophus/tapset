@@ -1,3 +1,18 @@
+/*
+ * Copyright 2013 Kirk Rader
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package us.rader.nfc;
 
 import android.app.Activity;
@@ -27,8 +42,8 @@ import android.util.Log;
  * 
  * <p>
  * The generic parameter, <code>ContentType</code>, is declared as the type
- * returned by {@link #processTag(Tag)} and expected by
- * {@link #onTagProcessed(Object)}
+ * returned by {@link #processTag(Tag, ProcessTagTask)} and expected by
+ * {@link #onTagProcessed(Object, ProcessTagOutcome)}
  * </p>
  * 
  * <p>
@@ -48,17 +63,18 @@ import android.util.Log;
  * </p>
  * 
  * @param <ContentType>
- *            the type of result to return from {@link #processTag(Tag)}
+ *            the type of result to return from
+ *            {@link #processTag(Tag, ProcessTagTask)}
  * 
  * @see #createNfcIntentFilters()
- * @see #processTag(Tag)
- * @see #onTagProcessed(Object)
+ * @see #processTag(Tag, ProcessTagTask)
+ * @see #onTagProcessed(Object, ProcessTagOutcome)
  * @see NdefReaderActivity
  * @see NdefWriterActivity
  * 
  * @author Kirk
  */
-public abstract class NfcReaderActivity<ContentType> extends Activity {
+public abstract class ForegroundDispatchActivity<ContentType> extends Activity {
 
     /**
      * Invoke {@Link NfcReaderActivity#processTag(Tag)} and {@Link
@@ -70,67 +86,88 @@ public abstract class NfcReaderActivity<ContentType> extends Activity {
      * {@link AsyncTask} arranges to invoke the appropriate methods in the
      * appropriate threads.
      * 
-     * @see NfcReaderActivity#processTag(Tag)
-     * @see NfcReaderActivity#onTagProcessed(Object)
+     * @see ForegroundDispatchActivity#processTag(Tag, ProcessTagTask)
+     * @see ForegroundDispatchActivity#onTagProcessed(Object, ProcessTagOutcome)
      * 
      * @author Kirk
      */
-    private class ProcessTagTask extends AsyncTask<Tag, Void, ContentType> {
+    protected class ProcessTagTask extends AsyncTask<Tag, Void, ContentType> {
 
         /**
-         * Invoke {@link NfcReaderActivity#processTag(Tag)} in a worker thread
+         * Additional diagnostic information for
+         * {@link ForegroundDispatchActivity#onTagProcessed(Object, ProcessTagOutcome)}
+         */
+        private ProcessTagOutcome outcome;
+
+        /**
+         * Update {@link #outcome}
+         * 
+         * Call this in your implementation of
+         * {@link ForegroundDispatchActivity#processTag(Tag, ProcessTagTask)} to
+         * provide additional diagnostic information to
+         * {@link ForegroundDispatchActivity#onTagProcessed(Object, ProcessTagOutcome)}
+         * 
+         * @param outcome
+         *            new value for {@link #outcome}
+         */
+        public void setOutcome(ProcessTagOutcome outcome) {
+
+            this.outcome = outcome;
+
+        }
+
+        /**
+         * Invoke
+         * {@link ForegroundDispatchActivity#processTag(Tag, ProcessTagTask)} in
+         * a worker thread
          * 
          * @param tags
          *            <code>tags[0]</code> is the {@link Tag} obtained using the
          *            foreground dispatch mechanism
          * 
          * @return the value returned by
-         *         {@link NfcReaderActivity#processTag(Tag)}
+         *         {@link ForegroundDispatchActivity#processTag(Tag, ProcessTagTask)}
          * 
          * @see AsyncTask#doInBackground(Object...)
-         * @see NfcReaderActivity#processTag(Tag)
+         * @see ForegroundDispatchActivity#processTag(Tag, ProcessTagTask)
          */
         @Override
         protected ContentType doInBackground(Tag... tags) {
 
             try {
 
-                setLastStatus(null);
-                return processTag(tags[0]);
+                setOutcome(ProcessTagOutcome.NOTHING_TO_DO);
+                return processTag(tags[0], this);
 
             } catch (Exception e) {
 
                 Log.e(getClass().getName(), "error processing tag", e); //$NON-NLS-1$
-
-                if (getLastStatus() == null) {
-
-                    setLastStatus(e.getMessage());
-
-                }
-
+                outcome = ProcessTagOutcome.TECHNOLOGY_ERROR;
                 return null;
 
             }
         }
 
         /**
-         * Invoke {@link NfcReaderActivity#onTagProcessed(Object)} on the UI
-         * thread
+         * Invoke
+         * {@link ForegroundDispatchActivity#onTagProcessed(Object, ProcessTagOutcome)}
+         * on the UI thread
          * 
          * @param result
          *            the value returned by
-         *            {@link NfcReaderActivity#processTag(Tag)}
+         *            {@link ForegroundDispatchActivity#processTag(Tag, ProcessTagTask)}
          * 
          * @see AsyncTask#onPostExecute(Object)
-         * @see NfcReaderActivity#processTag(Tag)
-         * @see NfcReaderActivity#onTagProcessed(Object)
+         * @see ForegroundDispatchActivity#processTag(Tag, ProcessTagTask)
+         * @see ForegroundDispatchActivity#onTagProcessed(Object,
+         *      ProcessTagOutcome)
          */
         @Override
         protected void onPostExecute(ContentType result) {
 
             try {
 
-                onTagProcessed(result);
+                onTagProcessed(result, outcome);
 
             } catch (Exception e) {
 
@@ -159,42 +196,12 @@ public abstract class NfcReaderActivity<ContentType> extends Activity {
     private IntentFilter[] filters;
 
     /**
-     * Set to <code>null</code> before each invocation of
-     * {@link #processTag(Tag)} and set to a diagnostic string if any errors
-     * occur
-     * 
-     * @see #getLastStatus()
-     */
-    private String         lastStatus;
-
-    /**
      * Cached {@link PendingIntent} for use in conjunction with the foreground
      * dispatch mechanism
      * 
      * @see #onResume()
      */
     private PendingIntent  pendingIntent;
-
-    /**
-     * Set {@link #lastStatus} to <code>null</code>
-     */
-    protected NfcReaderActivity() {
-
-        lastStatus = null;
-
-    }
-
-    /**
-     * Status message or <code>null</code> if no errors occurred during most
-     * recent invocation of {@link #processTag(Tag)}
-     * 
-     * @return the most recent status message or <code>null</code>
-     */
-    public final String getLastStatus() {
-
-        return lastStatus;
-
-    }
 
     /**
      * Create the {@link IntentFilter} array to use when enabling foreground
@@ -304,18 +311,25 @@ public abstract class NfcReaderActivity<ContentType> extends Activity {
     /**
      * Handle the result of processing a {@link Tag}
      * 
-     * This method exists separately from {@link #processTag(Tag)} because of
-     * the different contexts in which they are invoked. Specifically,
-     * {@link #processTag(Tag)} is invoked in a worker thread as required by
-     * most of the NFC API, while {@link #onTagProcessed(Object)} is invoked in
-     * the UI thread
+     * This method exists separately from
+     * {@link #processTag(Tag, ProcessTagTask)} because of the different
+     * contexts in which they are invoked. Specifically,
+     * {@link #processTag(Tag, ProcessTagTask)} is invoked in a worker thread as
+     * required by most of the NFC API, while
+     * {@link #onTagProcessed(Object, ProcessTagOutcome)} is invoked in the UI
+     * thread
      * 
      * @param result
-     *            the value returned by {@link #processTag(Tag)}
+     *            the value returned by {@link #processTag(Tag, ProcessTagTask)}
      * 
-     * @see #processTag(Tag)
+     * @param outcome
+     *            additional diagnostic information reported by
+     *            {@link #processTag(Tag, ProcessTagTask)}
+     * 
+     * @see #processTag(Tag, ProcessTagTask)
      */
-    protected abstract void onTagProcessed(ContentType result);
+    protected abstract void onTagProcessed(ContentType result,
+            ProcessTagOutcome outcome);
 
     /**
      * Process a {@link Tag}
@@ -326,21 +340,14 @@ public abstract class NfcReaderActivity<ContentType> extends Activity {
      * @param tag
      *            the {@link Tag}
      * 
+     * @param task
+     *            the {@link ProcessTagTask} invoking this method, for access to
+     *            its {@link ProcessTagTask#setOutcome(ProcessTagOutcome)}
+     *            method
+     * 
      * @return the app-specific data structure that is the result of having
      *         processed the {@link Tag}
      */
-    protected abstract ContentType processTag(Tag tag);
-
-    /**
-     * Set {@link #lastStatus} to the given value
-     * 
-     * @param lastStatus
-     *            the new value for {@link #lastStatus}
-     */
-    protected final void setLastStatus(String lastStatus) {
-
-        this.lastStatus = lastStatus;
-
-    }
+    protected abstract ContentType processTag(Tag tag, ProcessTagTask task);
 
 }

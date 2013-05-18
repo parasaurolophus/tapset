@@ -7,11 +7,11 @@
     android:baselineAligned="false"
     android:orientation="horizontal"
     android:showDividers="middle"
-    tools:context=".SettingsItemListActivity" >
+    tools:context=".ItemListActivity" >
 
     <fragment
         android:id="@+id/settingsitem_list"
-        android:name="us.rader.tapset.SettingsItemListFragment"
+        android:name="us.rader.tapset.ItemListFragment"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"

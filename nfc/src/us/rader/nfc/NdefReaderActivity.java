@@ -1,3 +1,18 @@
+/*
+ * Copyright 2013 Kirk Rader
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package us.rader.nfc;
 
 import java.io.UnsupportedEncodingException;
@@ -11,14 +26,15 @@ import android.nfc.tech.Ndef;
 import android.util.Log;
 
 /**
- * {@link NfcReaderActivity} that reads the contents of a NDEF formatted
- * {@link Tag}
+ * {@link ForegroundDispatchActivity} that reads the contents of a NDEF
+ * formatted {@link Tag}
  * 
- * @see NfcReaderActivity
+ * @see ForegroundDispatchActivity
  * 
  * @author Kirk
  */
-public abstract class NdefReaderActivity extends NfcReaderActivity<NdefMessage> {
+public abstract class NdefReaderActivity extends
+        ForegroundDispatchActivity<NdefMessage> {
 
     /**
      * NDEF RTD for text records
@@ -591,64 +607,32 @@ public abstract class NdefReaderActivity extends NfcReaderActivity<NdefMessage> 
      * 
      * @return the {@link NdefMessage} or <code>null</code>
      * 
-     * @see us.rader.nfc.NfcReaderActivity#processTag(android.nfc.Tag)
+     * @see us.rader.nfc.ForegroundDispatchActivity#processTag(android.nfc.Tag,
+     *      us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)
      */
     @Override
-    protected NdefMessage processTag(Tag tag) {
+    protected NdefMessage processTag(Tag tag, ProcessTagTask task) {
 
-        try {
+        if (tag == null) {
 
-            if (tag == null) {
-
-                return null;
-
-            }
-
-            Ndef ndef = Ndef.get(tag);
-
-            if (ndef == null) {
-
-                Log.w(NdefReaderActivity.class.getName(),
-                        "tag is not NDEF formatted"); //$NON-NLS-1$
-                return null;
-
-            }
-
-            ndef.connect();
-
-            try {
-
-                NdefMessage message = ndef.getNdefMessage();
-
-                if (message == null) {
-
-                    Log.w(NdefReaderActivity.class.getName(),
-                            "NDEF formatted tag is empty"); //$NON-NLS-1$
-
-                }
-
-                return message;
-
-            } finally {
-
-                ndef.close();
-
-            }
-
-        } catch (Exception e) {
-
-            Log.e(NdefReaderActivity.class.getName(),
-                    "error reading NDEF message from tag", e); //$NON-NLS-1$
-
-            if (getLastStatus() == null) {
-
-                setLastStatus(getString(R.string.error_reading_ndef_message));
-
-            }
-
+            task.setOutcome(ProcessTagOutcome.NOTHING_TO_DO);
             return null;
 
         }
+
+        Ndef ndef = Ndef.get(tag);
+
+        if (ndef == null) {
+
+            Log.w(NdefReaderActivity.class.getName(),
+                    "tag is not NDEF formatted"); //$NON-NLS-1$
+            task.setOutcome(ProcessTagOutcome.UNSUPPORTED_TAG);
+            return null;
+
+        }
+
+        task.setOutcome(ProcessTagOutcome.SUCCESSFUL_READ);
+        return ndef.getCachedNdefMessage();
 
     }
 

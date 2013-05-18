@@ -1,6 +1,5 @@
 /*
  * Copyright 2013 Kirk Rader
-
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,10 +11,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-
  */
 
-package us.rader.tapset.settingsitems;
+package us.rader.tapset.item;
 
 import java.util.Map;
 
@@ -31,13 +29,13 @@ import android.widget.RadioButton;
 import android.widget.SeekBar;
 
 /**
- * {@link SettingsItem} for audio volumes (ringer volume, notification volume,
+ * {@link Item} for audio volumes (ringer volume, notification volume,
  * vibration etc.)
  * 
  * @author Kirk
  * 
  */
-final class VolumeSettings extends SettingsItem<AudioManager> {
+final class VolumeSettings extends Item<AudioManager> {
 
     /**
      * Set {@link VolumeSettings#includeOutput} when the UI check box state
@@ -318,7 +316,7 @@ final class VolumeSettings extends SettingsItem<AudioManager> {
     private RadioButton         ringerVibrateButton;
 
     /**
-     * Initialize {@link SettingsItem} and {@link #includeOutput}
+     * Initialize {@link Item} and {@link #includeOutput}
      * 
      * @param context
      *            the {@link Context}
@@ -339,7 +337,7 @@ final class VolumeSettings extends SettingsItem<AudioManager> {
      * 
      * @return volume settings layout resource id
      * 
-     * @see SettingsItem#getLayoutResource()
+     * @see Item#getLayoutResource()
      */
     @Override
     public final int getLayoutResource() {
@@ -362,7 +360,7 @@ final class VolumeSettings extends SettingsItem<AudioManager> {
      *            the query string parameter {@link Map}
      * 
      * @see #includeOutput
-     * @see SettingsItem#addParameters(Context, Map)
+     * @see Item#addParameters(Context, Map)
      */
     @Override
     protected final void addParameters(Context context,
@@ -394,7 +392,7 @@ final class VolumeSettings extends SettingsItem<AudioManager> {
      * @return <code>true</code> if and only if the UI was successfully
      *         initialized
      * 
-     * @see SettingsItem#initializeUi(Context, View)
+     * @see Item#initializeUi(Context, View)
      */
     @Override
     protected final boolean initializeUi(Context context, View settingsView) {
@@ -439,7 +437,7 @@ final class VolumeSettings extends SettingsItem<AudioManager> {
      * @param uri
      *            the {@link Uri} read from a NFC tag, QR code etc.
      * 
-     * @see SettingsItem#updateSettings(Context, Uri)
+     * @see Item#updateSettings(Context, Uri)
      */
     @Override
     protected final void updateSettings(Context context, Uri uri) {
