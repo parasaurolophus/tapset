@@ -34,9 +34,9 @@ import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
 /**
- * An activity representing a list of SettingsItems. This activity has different
- * presentations for handset and tablet-size devices. On handsets, the activity
- * presents a list of items, which when touched, lead to a
+ * An activity representing a list of {@link Item} instances. This activity has
+ * different presentations for handset and tablet-size devices. On handsets, the
+ * activity presents a list of items, which when touched, lead to a
  * {@link ItemDetailActivity} representing item details. On tablets, the
  * activity presents the list of items and item details side-by-side using two
  * vertical panes.
@@ -46,8 +46,8 @@ import com.google.zxing.integration.android.IntentResult;
  * {@link ItemDetailFragment}.
  * <p>
  * This activity also implements the required
- * {@link ItemListFragment.ItemSelectedListener} interface to listen for
- * item selections.
+ * {@link ItemListFragment.ItemSelectedListener} interface to listen for item
+ * selections.
  */
 public class ItemListActivity extends FragmentActivity implements
         ItemListFragment.ItemSelectedListener {
@@ -61,7 +61,7 @@ public class ItemListActivity extends FragmentActivity implements
     /**
      * {@link Intent} action used when invoking {@link ShowQrCodeActivity}
      */
-    private static final String ACTION_SHOW_QR         = "us.rader.tapset.showqr";    //$NON-NLS-1$
+    private static final String ACTION_SHOW_QR         = "us.rader.tapset.showqr"; //$NON-NLS-1$
 
     /**
      * Display the given string in an {@link AlertDialog}
@@ -157,9 +157,8 @@ public class ItemListActivity extends FragmentActivity implements
      */
     public static boolean showQrCode(Context context) {
 
-        Intent intent = new Intent(ACTION_SHOW_QR,
-                Item.createUri(context), context,
-                ShowQrCodeActivity.class);
+        Intent intent = new Intent(ACTION_SHOW_QR, Item.createUri(context),
+                context, ShowQrCodeActivity.class);
         context.startActivity(intent);
         return true;
 
@@ -185,8 +184,7 @@ public class ItemListActivity extends FragmentActivity implements
 
         IntentResult intentResult = IntentIntegrator.parseActivityResult(
                 requestCode, resultCode, resultIntent);
-        Item.updateAllSettings(activity,
-                Uri.parse(intentResult.getContents()));
+        Item.updateAllSettings(activity, Uri.parse(intentResult.getContents()));
 
     }
 
@@ -201,10 +199,8 @@ public class ItemListActivity extends FragmentActivity implements
      */
     public static boolean writeTag(Activity context) {
 
-        Intent intent = new Intent(
-                "us.rader.tapset.writetag", //$NON-NLS-1$
-                Item.createUri(context), context,
-                WriteTagActivity.class);
+        Intent intent = new Intent("us.rader.tapset.writetag", //$NON-NLS-1$
+                Item.createUri(context), context, WriteTagActivity.class);
         context.startActivityForResult(intent, REQUEST_CODE_WRITE_TAG);
         return true;
 
@@ -245,9 +241,8 @@ public class ItemListActivity extends FragmentActivity implements
     }
 
     /**
-     * Callback method from
-     * {@link ItemListFragment.ItemSelectedListener} indicating that the
-     * item with the given ID was selected.
+     * Callback method from {@link ItemListFragment.ItemSelectedListener}
+     * indicating that the item with the given ID was selected.
      */
     @Override
     public void onItemSelected(String id) {
@@ -269,8 +264,7 @@ public class ItemListActivity extends FragmentActivity implements
 
             // In single-pane mode, simply start the detail activity
             // for the selected item ID.
-            Intent detailIntent = new Intent(this,
-                    ItemDetailActivity.class);
+            Intent detailIntent = new Intent(this, ItemDetailActivity.class);
             detailIntent.putExtra(ItemDetailFragment.ARG_ITEM_ID, id);
             startActivity(detailIntent);
 
@@ -321,8 +315,8 @@ public class ItemListActivity extends FragmentActivity implements
      * This override uses
      * {@link IntentIntegrator#parseActivityResult(int, int, Intent)} to forward
      * the {@link Uri} from the result's {@link Intent#getData()} to
-     * {@link Item#updateAllSettings(Context, Uri)} on the assumption
-     * that the handler {@link Activity} was launched to scan a QR code
+     * {@link Item#updateAllSettings(Context, Uri)} on the assumption that the
+     * handler {@link Activity} was launched to scan a QR code
      * 
      * @param requestCode
      *            the request id originally passed to

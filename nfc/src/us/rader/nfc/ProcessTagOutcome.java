@@ -27,8 +27,8 @@ import android.nfc.tech.TagTechnology;
 public enum ProcessTagOutcome {
 
     /**
-     * {@link ForegroundDispatchActivity#processTag(Tag)} reported that it took
-     * no action for the given {@link Tag}
+     * {@link ForegroundDispatchActivity#processTag(Tag, us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)
+     * )} reported that it took no action for the given {@link Tag}
      */
     NOTHING_TO_DO,
 

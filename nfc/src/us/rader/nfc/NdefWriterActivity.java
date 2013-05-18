@@ -355,8 +355,9 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
      *            the {@link Tag}
      * 
      * @param task
-     *            use {@link ProcessTagTask#setOutcome(ProcessTagOutcome)} to
-     *            provide additional diagnostic information to
+     *            use
+     *            {@link us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask#setOutcome(ProcessTagOutcome)}
+     *            to provide additional diagnostic information to
      *            {@link ForegroundDispatchActivity#onTagProcessed(Object, ProcessTagOutcome)}
      * 
      * @return the {@link NdefMessage} that was written to the {@link Tag} or
@@ -405,8 +406,9 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
      *            the {@Link Ndef} instance
      * 
      * @param task
-     *            use {@link ProcessTagTask#setOutcome(ProcessTagOutcome)} to
-     *            provide additional diagnostic information to
+     *            use
+     *            {@link us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask#setOutcome(ProcessTagOutcome)}
+     *            to provide additional diagnostic information to
      *            {@link ForegroundDispatchActivity#onTagProcessed(Object, ProcessTagOutcome)}
      * 
      * @return the {@link NdefMessage} that was written
@@ -477,8 +479,9 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
      *            the {@Link NdefFormatable} instance
      * 
      * @param task
-     *            use {@link ProcessTagTask#setOutcome(ProcessTagOutcome)} to
-     *            provide additional diagnostic information to
+     *            use
+     *            {@link us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask#setOutcome(ProcessTagOutcome)}
+     *            to provide additional diagnostic information to
      *            {@link ForegroundDispatchActivity#onTagProcessed(Object, ProcessTagOutcome)}
      * 
      * @return the {@link NdefMessage} that was written

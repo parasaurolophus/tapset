@@ -41,7 +41,7 @@
         <activity
             android:name="us.rader.tapset.ItemDetailActivity"
             android:label="@string/title_settingsitem_detail"
-            android:parentActivityName=".ItemListActivity" >
+            android:parentActivityName=".SettingsItemListActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".SettingsItemListActivity" />
@@ -49,7 +49,7 @@
         <activity
             android:name="us.rader.tapset.WriteTagActivity"
             android:label="@string/title_activity_write_tag"
-            android:parentActivityName="us.rader.tapset.ItemListActivity" >
+            android:parentActivityName="us.rader.tapset.SettingsItemListActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="us.rader.tapset.SettingsItemListActivity" />
@@ -57,7 +57,7 @@
         <activity
             android:name="us.rader.tapset.ShowQrCodeActivity"
             android:label="@string/title_activity_qr_code"
-            android:parentActivityName="us.rader.tapset.ItemListActivity" >
+            android:parentActivityName="us.rader.tapset.SettingsItemListActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="us.rader.tapset.SettingsItemListActivity" />
@@ -70,6 +70,15 @@
             android:grantUriPermissions="true"
             android:icon="@drawable/ic_launcher" >
         </provider>
+
+        <activity
+            android:name="us.rader.tapset.ReadTestActivity"
+            android:label="@string/title_activity_read_test"
+            android:parentActivityName="us.rader.tapset.SettingsItemListActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="us.rader.tapset.SettingsItemListActivity" />
+        </activity>
     </application>
 
 </manifest>
