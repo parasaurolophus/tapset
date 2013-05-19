@@ -15,6 +15,7 @@
 
 package us.rader.tapset;
 
+import us.rader.nfc.ProcessTagOutcome;
 import us.rader.tapset.item.Item;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -107,13 +108,61 @@ public class ItemListActivity extends FragmentActivity implements
     public static void handleWriteTagResult(Activity activity,
             Intent resultIntent) {
 
+        ProcessTagOutcome outcome = (ProcessTagOutcome) resultIntent
+                .getSerializableExtra(WriteTagActivity.EXTRA_OUTCOME);
         NdefMessage message = resultIntent
                 .getParcelableExtra(WriteTagActivity.EXTRA_RESULT);
 
+        switch (outcome) {
+
+            case NOTHING_TO_DO:
+
+                Toast.makeText(activity, R.string.no_action_taken_for_tag,
+                        Toast.LENGTH_LONG).show();
+                return;
+
+            case READ_ONLY_TAG:
+
+                Toast.makeText(activity, R.string.read_only_tag,
+                        Toast.LENGTH_LONG).show();
+                return;
+
+            case SUCCESSFUL_READ:
+            case SUCCESSFUL_WRITE:
+
+                break;
+
+            case TAG_SIZE_EXCEEDED:
+
+                Toast.makeText(activity, R.string.tag_size_exceeded,
+                        Toast.LENGTH_LONG).show();
+                return;
+
+            case TECHNOLOGY_ERROR:
+
+                Toast.makeText(activity, R.string.tag_technology_error,
+                        Toast.LENGTH_LONG).show();
+                return;
+
+            case UNSUPPORTED_TAG:
+
+                Toast.makeText(activity, R.string.unsupported_tag_technology,
+                        Toast.LENGTH_LONG).show();
+                return;
+
+            default:
+
+                Toast.makeText(activity,
+                        R.string.unrecognized_outcome_reported,
+                        Toast.LENGTH_LONG).show();
+                return;
+
+        }
+
         if (message == null) {
 
-            Toast.makeText(activity, R.string.error_processing_tag,
-                    Toast.LENGTH_LONG).show();
+            Toast.makeText(activity, R.string.null_message, Toast.LENGTH_LONG)
+                    .show();
 
         } else {
 

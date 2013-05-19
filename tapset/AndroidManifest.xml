@@ -70,15 +70,6 @@
             android:grantUriPermissions="true"
             android:icon="@drawable/ic_launcher" >
         </provider>
-
-        <activity
-            android:name="us.rader.tapset.ReadTestActivity"
-            android:label="@string/title_activity_read_test"
-            android:parentActivityName="us.rader.tapset.SettingsItemListActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="us.rader.tapset.SettingsItemListActivity" />
-        </activity>
     </application>
 
 </manifest>

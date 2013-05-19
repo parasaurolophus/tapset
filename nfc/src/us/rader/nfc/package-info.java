@@ -52,15 +52,18 @@
  * </ul>
  * 
  * <p>
- * That are called at the correct points in the {@link android.app.Activity} and on
+ * that are called at the correct points in the {@link android.app.Activity} life-cycle and on
  * appropriate threads.
  * </p>
  * 
  * <p>
  * Note that the generic parameter type for {@link us.rader.nfc.ForegroundDispatchActivity}
  * is declared to be the type returned by
- * {@link us.rader.nfc.ForegroundDispatchActivity#processTag(android.nfc.Tag, us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)} and expected by
- * {@link us.rader.nfc.ForegroundDispatchActivity#onTagProcessed(java.lang.Object, ProcessTagOutcome)}
+ * {@link us.rader.nfc.ForegroundDispatchActivity#processTag(android.nfc.Tag, us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)}
+ * and expected by
+ * {@link us.rader.nfc.ForegroundDispatchActivity#onTagProcessed(java.lang.Object, ProcessTagOutcome)}.
+ * The former is called on a worker thread when a {@link android.nfc.Tag} is detected while foreground
+ * dispatch is enabled and whatever it returns is passed to the latter, on the UI thread
  * </p>
  * 
  * @see us.rader.nfc.ForegroundDispatchActivity

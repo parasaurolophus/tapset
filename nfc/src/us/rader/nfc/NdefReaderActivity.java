@@ -15,6 +15,8 @@
 
 package us.rader.nfc;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.nfc.NdefMessage;
 import android.nfc.NfcAdapter;
@@ -36,6 +38,17 @@ public abstract class NdefReaderActivity extends
     /**
      * Create the {@link IntentFilter} array to use when enabling foreground
      * dispatch
+     * 
+     * Due to "features"
+     * ("a feature is a bug as described by the marketing department") of the
+     * {@link Intent} filtering and {@link Activity} selection performed by
+     * {@link NfcAdapter} while foreground dispatch is enabled, this requests to
+     * be notified of detection of any {@link Tag}, not just ones that are or
+     * can NDEF formatted. Classes that extend this one must take this into
+     * account; i.e.
+     * {@link #processTag(Tag, us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)}
+     * must check the {@link Tag} to make sure it really can handle the given
+     * technology.
      * 
      * @return the {@link IntentFilter} array
      */
@@ -75,9 +88,12 @@ public abstract class NdefReaderActivity extends
      * @param tag
      *            the {@link Tag}
      * 
+     * @param task
+     *            {@link us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask}
+     * 
      * @return the {@link NdefMessage} or <code>null</code>
      * 
-     * @see us.rader.nfc.ForegroundDispatchActivity#processTag(android.nfc.Tag,
+     * @see ForegroundDispatchActivity#processTag(Tag,
      *      us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)
      */
     @Override
@@ -85,6 +101,8 @@ public abstract class NdefReaderActivity extends
 
         if (tag == null) {
 
+            Log.e(NdefReaderActivity.class.getName(),
+                    "null passed to processTag"); //$NON-NLS-1$
             task.setOutcome(ProcessTagOutcome.NOTHING_TO_DO);
             return null;
 
@@ -94,15 +112,22 @@ public abstract class NdefReaderActivity extends
 
         if (ndef == null) {
 
-            Log.w(NdefReaderActivity.class.getName(),
-                    "tag is not NDEF formatted"); //$NON-NLS-1$
             task.setOutcome(ProcessTagOutcome.UNSUPPORTED_TAG);
             return null;
 
         }
 
+        NdefMessage message = ndef.getCachedNdefMessage();
+
+        if (message == null) {
+
+            Log.e(NdefReaderActivity.class.getName(),
+                    "cached NDEF message is null"); //$NON-NLS-1$
+
+        }
+
         task.setOutcome(ProcessTagOutcome.SUCCESSFUL_READ);
-        return ndef.getCachedNdefMessage();
+        return message;
 
     }
 

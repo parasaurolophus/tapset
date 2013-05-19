@@ -28,8 +28,6 @@ import us.rader.nfc.ProcessTagOutcome;
 import android.app.Activity;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
-import android.nfc.Tag;
-import android.nfc.tech.Ndef;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -175,6 +173,12 @@ public class MainActivity extends NdefWriterActivity {
     @Override
     protected NdefMessage createNdefMessage(NdefMessage currentContents) {
 
+        if (writeMode) {
+
+            return currentContents;
+
+        }
+
         ArrayList<NdefRecord> records = new ArrayList<NdefRecord>();
         records.add(ndefRecordUtilities.createText("some text", "en")); //$NON-NLS-1$//$NON-NLS-2$
 
@@ -218,9 +222,6 @@ public class MainActivity extends NdefWriterActivity {
      * 
      * @param message
      *            the {@link NdefMessage}
-     * 
-     * @param outcome
-     *            additional diagnostic information
      */
     @Override
     protected void onTagProcessed(NdefMessage message, ProcessTagOutcome outcome) {
@@ -262,35 +263,6 @@ public class MainActivity extends NdefWriterActivity {
 
         contentList.setAdapter(new NdefRecordListAdapter(data,
                 R.layout.ndef_details, from, to));
-
-    }
-
-    /**
-     * Return either the result of reading the given {@link Tag} or of writing
-     * the value returned by {@link #createNdefMessage(NdefMessage)} depending
-     * on the selected test mode
-     */
-    @Override
-    protected NdefMessage processTag(Tag tag, ProcessTagTask task) {
-
-        if (writeMode) {
-
-            return super.processTag(tag, task);
-
-        }
-
-        Ndef ndef = Ndef.get(tag);
-
-        if (ndef == null) {
-
-            display(getString(R.string.not_ndef));
-            task.setOutcome(ProcessTagOutcome.NOTHING_TO_DO);
-            return null;
-
-        }
-
-        task.setOutcome(ProcessTagOutcome.SUCCESSFUL_READ);
-        return ndef.getCachedNdefMessage();
 
     }
 

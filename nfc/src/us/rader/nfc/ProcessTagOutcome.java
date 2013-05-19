@@ -15,6 +15,8 @@
 
 package us.rader.nfc;
 
+import java.io.Serializable;
+
 import android.nfc.Tag;
 import android.nfc.tech.TagTechnology;
 
@@ -24,11 +26,11 @@ import android.nfc.tech.TagTechnology;
  * 
  * @author Kirk
  */
-public enum ProcessTagOutcome {
+public enum ProcessTagOutcome implements Serializable {
 
     /**
-     * {@link ForegroundDispatchActivity#processTag(Tag, us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)
-     * )} reported that it took no action for the given {@link Tag}
+     * {@link ForegroundDispatchActivity#processTag(Tag, us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)}
+     * reported that it took no action for the given {@link Tag}
      */
     NOTHING_TO_DO,
 
@@ -63,5 +65,10 @@ public enum ProcessTagOutcome {
      * when attempting write etc.
      */
     UNSUPPORTED_TAG;
+
+    /**
+     * Serialization version number
+     */
+    private static final long serialVersionUID = 1L;
 
 }

@@ -30,60 +30,18 @@ import android.util.Log;
  * Super class of any {@link Activity} that prompts the user to scan a NFC tag
  * so as to write a {@link NdefMessage} to it
  * 
- * <p>
  * Since writing a {@link NdefMessage} involves the use of the
  * {@link NfcAdapter} foreground dispatch mechanism in a way that is almost
  * identical to that which is used to read one, this class extends
- * {@link NdefReaderActivity} in a manner to which object-oriented purists might
- * object (pun intended) as being "inheritance for implementation," to which the
- * author replies, "even if you were correct, what is your point?" :-)
- * </p>
- * 
- * <p>
- * One way of dispensing with such criticism would be simply to give the
- * ancestor classes more cumbersome names, like
- * <code>NfcForegroundDispatcherActivity</code> and so on. That, of course, is
- * the real point of the "what is your point?" quip: complaints about
- * "inheritance for implementation" usually miss the point of why
- * object-oriented programming is useful and powerful to start with. It also is
- * often, as in this case, more a matter of terminology and point of view than
- * of objective (again, pun intended) reality. If two classes really share
- * enough in common to make "inheritance for implementation" useful, there
- * probably is some kind of "is a" relationship between them, even if it is
- * sometimes obfuscated a bit by type names chosen for clarity rather than
- * theoretical precision.
- * </p>
- * 
- * <p>
- * As a side note along these lines, consider that there has been enough
- * disagreement about the validity of the proscription against
- * "inheritance for implementation" that at least one historically significant
- * object-oriented programming language, C++, makes
- * "inheritance for implementation" the default form of inheritance between
- * classes while requiring the explicit use of the <code>public</code> keyword
- * to establish an "is a" relationship.
- * </p>
- * 
- * <p>
- * If the preceding ruminations fail to convince, another justification for this
- * "abuse" of inheritance, which is at least a little different from a
- * post-rationalization, it should be noted that this class does in fact offer
- * the option of "modifying" an existing {@link NdefMessage} in a given
- * {@link Tag} by first reading its contents before writing to it. In such cases
- * a "writer" class is also a "reader" and since Java doesn't support a mix-in
- * style of inheritance (i.e. it is sadly deficient in its approach to multiple
- * inheritance) it makes sense to provide for that possibility in the only way
- * practical when constrained by single-inheritance. The validity of this "is a"
- * relationship is reinforced by the tightly coupled semantics of some of the
- * helper data structures and methods of both classes, e.g. the inverse
- * relationships between and common use of
- * {@link NdefRecordUtilities#WELL_KNOWN_URI_PREFIX} by both
- * {@link NdefRecordUtilities#decodeUri(byte[])} and
- * {@link NdefRecordUtilities#createUri(String)} and so on. So there! :-)
- * </p>
+ * {@link NdefReaderActivity}. This isn't mere "inheritance for implementation,"
+ * (though objections along such lines are frequently more a matter of point of
+ * view than of objective fact -- pun intended) since this presents a paradigm
+ * in which the contents of a {@link Tag} can be "modified" by passing the
+ * current {@link NdefMessage} to {@link #createNdefMessage(NdefMessage)}
  * 
  * @see #createNdefMessage(NdefMessage)
  * @see #processTag(Tag, us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)
+ *      )
  * 
  * @author Kirk
  */
@@ -92,7 +50,8 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
     /**
      * If <code>true</code> attempt to mark the {@link Tag} read-only after
      * writing or while formatting in
-     * {@link #processTag(Tag, us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)}
+     * {@link #processTag(Tag, us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)
+     * )}
      * 
      * @see #isReadOnlyRequested()
      * @see #setReadonlyRequested(boolean)
@@ -183,19 +142,24 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
      *            the {@link Tag}
      * 
      * @param task
-     *            use
-     *            {@link us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask#setOutcome(ProcessTagOutcome)}
-     *            to provide additional diagnostic information to
-     *            {@link ForegroundDispatchActivity#onTagProcessed(Object, ProcessTagOutcome)}
+     *            the
+     *            {@link us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask}
      * 
      * @return the {@link NdefMessage} that was written to the {@link Tag} or
      *         <code>null</code> if an error occurs
      * 
-     * @see us.rader.nfc.NdefReaderActivity#processTag(android.nfc.Tag,
+     * @see us.rader.nfc.NdefReaderActivity#processTag(Tag,
      *      us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)
      */
     @Override
-    protected NdefMessage processTag(Tag tag, ProcessTagTask task) {
+    protected final NdefMessage processTag(Tag tag, ProcessTagTask task) {
+
+        if (tag == null) {
+
+            task.setOutcome(ProcessTagOutcome.NOTHING_TO_DO);
+            return null;
+
+        }
 
         try {
 
@@ -234,10 +198,8 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
      *            the {@Link Ndef} instance
      * 
      * @param task
-     *            use
-     *            {@link us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask#setOutcome(ProcessTagOutcome)}
-     *            to provide additional diagnostic information to
-     *            {@link ForegroundDispatchActivity#onTagProcessed(Object, ProcessTagOutcome)}
+     *            the
+     *            {@link us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask}
      * 
      * @return the {@link NdefMessage} that was written
      * 
@@ -251,11 +213,22 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
             throws IOException, FormatException {
 
         NdefMessage currentContents = ndef.getCachedNdefMessage();
-        NdefMessage message = createNdefMessage(currentContents);
+        NdefMessage newMessage = createNdefMessage(currentContents);
 
-        if (message == null) {
+        if (newMessage == null) {
 
-            task.setOutcome(ProcessTagOutcome.NOTHING_TO_DO);
+            if (currentContents == null) {
+
+                Log.e(NdefWriterActivity.class.getName(),
+                        "cached NDEF message is null"); //$NON-NLS-1$
+                task.setOutcome(ProcessTagOutcome.UNSUPPORTED_TAG);
+
+            } else {
+
+                task.setOutcome(ProcessTagOutcome.SUCCESSFUL_READ);
+
+            }
+
             return currentContents;
 
         }
@@ -267,7 +240,7 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
 
         }
 
-        byte[] bytes = message.toByteArray();
+        byte[] bytes = newMessage.toByteArray();
         int maxSize = ndef.getMaxSize();
 
         if (bytes.length > maxSize) {
@@ -281,7 +254,7 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
 
         try {
 
-            ndef.writeNdefMessage(message);
+            ndef.writeNdefMessage(newMessage);
 
             if (readOnlyRequested) {
 
@@ -289,7 +262,8 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
 
             }
 
-            return message;
+            task.setOutcome(ProcessTagOutcome.SUCCESSFUL_WRITE);
+            return newMessage;
 
         } finally {
 
@@ -307,10 +281,8 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
      *            the {@Link NdefFormatable} instance
      * 
      * @param task
-     *            use
-     *            {@link us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask#setOutcome(ProcessTagOutcome)}
-     *            to provide additional diagnostic information to
-     *            {@link ForegroundDispatchActivity#onTagProcessed(Object, ProcessTagOutcome)}
+     *            the
+     *            {@link us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask}
      * 
      * @return the {@link NdefMessage} that was written
      * 

@@ -34,8 +34,8 @@ import android.support.v4.app.NavUtils;
 import android.view.MenuItem;
 
 /**
- * {@link NdefWriterActivity} used by this app to write a NDEF 'U' record
- * followed by a AAR linking to the Play store
+ * {@link NdefWriterActivity} used by this app to write a NDEF 'U' record to a
+ * {@link Tag}
  * 
  * @author Kirk
  */
@@ -46,7 +46,7 @@ public final class WriteTagActivity extends NdefWriterActivity {
      * {@link ProcessTagOutcome} parameter to
      * {@link #onTagProcessed(NdefMessage, ProcessTagOutcome)}
      */
-    public static final String               EXTRA_OUTCOME = "us.rader.tapset.result"; //$NON-NLS-1$
+    public static final String               EXTRA_OUTCOME = "us.rader.tapset.outcome"; //$NON-NLS-1$
 
     /**
      * The {@link Intent#getParcelableExtra(String)} key used to convey the
@@ -144,25 +144,20 @@ public final class WriteTagActivity extends NdefWriterActivity {
      * 
      * @param result
      *            the {@link NdefMessage}
-     * 
-     * @param outcome
-     *            additional diagnostic infomration
      */
     @Override
     protected void onTagProcessed(NdefMessage result, ProcessTagOutcome outcome) {
 
-        if (result == null) {
+        Intent intent = new Intent();
 
-            setResult(RESULT_FIRST_USER);
+        if (result != null) {
 
-        } else {
-
-            Intent intent = new Intent();
             intent.putExtra(EXTRA_RESULT, result);
-            setResult(RESULT_OK, intent);
 
         }
 
+        intent.putExtra(EXTRA_OUTCOME, outcome);
+        setResult(RESULT_OK, intent);
         finish();
 
     }

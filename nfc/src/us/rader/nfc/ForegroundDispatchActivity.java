@@ -64,7 +64,8 @@ import android.util.Log;
  * 
  * @param <ContentType>
  *            the type of result to return from
- *            {@link #processTag(Tag, ProcessTagTask)}
+ *            {@link #processTag(Tag, ProcessTagTask)} and to pass, in turn, to
+ *            {@link #onTagProcessed(Object, ProcessTagOutcome)}
  * 
  * @see #createNfcIntentFilters()
  * @see #processTag(Tag, ProcessTagTask)
@@ -77,38 +78,36 @@ import android.util.Log;
 public abstract class ForegroundDispatchActivity<ContentType> extends Activity {
 
     /**
-     * Invoke {@Link NfcReaderActivity#processTag(Tag)} and {@Link
-     *  NfcReaderActivity#onTagProcessed(Object)} asynchronously
+     * Invoke {@Link ForegroundDispatchActivity#processTag(Tag,
+     * ProcessTagTask))} and {@Link
+     * ForegroundDispatchActivity#onTagProcessed(Object, ProcessTagOutcome)}
+     * asynchronously
      * 
      * Much of the NFC related API must be invoked on a worker thread separate
      * from the main UI thread, and yet the app also must be able to update the
-     * state of its UI once the contents of a tag has been obtained. This
-     * {@link AsyncTask} arranges to invoke the appropriate methods in the
-     * appropriate threads.
+     * state of its UI once the contents of a tag has been obtained and
+     * processed. This {@link AsyncTask} arranges to invoke the appropriate
+     * methods in the appropriate threads.
      * 
      * @see ForegroundDispatchActivity#processTag(Tag, ProcessTagTask)
      * @see ForegroundDispatchActivity#onTagProcessed(Object, ProcessTagOutcome)
      * 
      * @author Kirk
      */
-    protected class ProcessTagTask extends AsyncTask<Tag, Void, ContentType> {
+    protected final class ProcessTagTask extends
+            AsyncTask<Tag, Void, ContentType> {
 
         /**
-         * Additional diagnostic information for
-         * {@link ForegroundDispatchActivity#onTagProcessed(Object, ProcessTagOutcome)}
+         * Additional diagnostic information from the most recent invocation of
+         * {@link #processTag(Tag, ProcessTagTask)}
          */
         private ProcessTagOutcome outcome;
 
         /**
          * Update {@link #outcome}
          * 
-         * Call this in your implementation of
-         * {@link ForegroundDispatchActivity#processTag(Tag, ProcessTagTask)} to
-         * provide additional diagnostic information to
-         * {@link ForegroundDispatchActivity#onTagProcessed(Object, ProcessTagOutcome)}
-         * 
          * @param outcome
-         *            new value for {@link #outcome}
+         *            New value for {@link #outcome}
          */
         public void setOutcome(ProcessTagOutcome outcome) {
 
@@ -121,6 +120,11 @@ public abstract class ForegroundDispatchActivity<ContentType> extends Activity {
          * {@link ForegroundDispatchActivity#processTag(Tag, ProcessTagTask)} in
          * a worker thread
          * 
+         * This returns the result of calling
+         * {@link ForegroundDispatchActivity#processTag(Tag, ProcessTagTask)}
+         * which is then, in turn, passed to {@link #onPostExecute(Object)} on
+         * the UI thread
+         * 
          * @param tags
          *            <code>tags[0]</code> is the {@link Tag} obtained using the
          *            foreground dispatch mechanism
@@ -130,13 +134,14 @@ public abstract class ForegroundDispatchActivity<ContentType> extends Activity {
          * 
          * @see AsyncTask#doInBackground(Object...)
          * @see ForegroundDispatchActivity#processTag(Tag, ProcessTagTask)
+         * @see #onPostExecute(Object)
          */
         @Override
         protected ContentType doInBackground(Tag... tags) {
 
             try {
 
-                setOutcome(ProcessTagOutcome.NOTHING_TO_DO);
+                outcome = ProcessTagOutcome.NOTHING_TO_DO;
                 return processTag(tags[0], this);
 
             } catch (Exception e) {
@@ -152,6 +157,15 @@ public abstract class ForegroundDispatchActivity<ContentType> extends Activity {
          * Invoke
          * {@link ForegroundDispatchActivity#onTagProcessed(Object, ProcessTagOutcome)}
          * on the UI thread
+         * 
+         * This is invoked on the UI thread with whatever value was returned by
+         * {@link #doInBackground(Tag...)} on the worker thread. This method
+         * also assumes that
+         * {@link ForegroundDispatchActivity#processTag(Tag, ProcessTagTask)}
+         * will have left {@link #outcome} in the correct state to provide
+         * additional diagnostic information when
+         * {@link ForegroundDispatchActivity#onTagProcessed(Object, ProcessTagOutcome)}
+         * is invoked
          * 
          * @param result
          *            the value returned by
@@ -323,8 +337,7 @@ public abstract class ForegroundDispatchActivity<ContentType> extends Activity {
      *            the value returned by {@link #processTag(Tag, ProcessTagTask)}
      * 
      * @param outcome
-     *            additional diagnostic information reported by
-     *            {@link #processTag(Tag, ProcessTagTask)}
+     *            Additional diagnostic information
      * 
      * @see #processTag(Tag, ProcessTagTask)
      */
@@ -335,15 +348,14 @@ public abstract class ForegroundDispatchActivity<ContentType> extends Activity {
      * Process a {@link Tag}
      * 
      * This method can rely on, and must take account of being called in a
-     * worker thread separate from the main UI.
+     * worker thread separate from the main UI
      * 
      * @param tag
      *            the {@link Tag}
      * 
      * @param task
-     *            the {@link ProcessTagTask} invoking this method, for access to
-     *            its {@link ProcessTagTask#setOutcome(ProcessTagOutcome)}
-     *            method
+     *            use{@link ProcessTagTask#setOutcome(ProcessTagOutcome)} to set
+     *            additional diagnostic information
      * 
      * @return the app-specific data structure that is the result of having
      *         processed the {@link Tag}

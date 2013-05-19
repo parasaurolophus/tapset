@@ -22,12 +22,8 @@ import android.nfc.NdefRecord;
 import android.util.Log;
 
 /**
- * Utility class providing helper methods for creating and parsing instances of
- * {@link NdefRecord}
- * 
- * This provides slightly enhanced versions of some of the functionality
- * introduced in later versions of the Android SDK, in a manner that is
- * backwards compatible to SDK 10
+ * Singleton class providing helper methods for creating and parsing instances
+ * of {@link NdefRecord}
  * 
  * @author Kirk
  * 

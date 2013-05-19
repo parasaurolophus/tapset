@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="action_settings">Settings</string>
     <string name="alarm_volume_label_text">Alarm</string>
     <string name="app_name">tapset</string>
     <string name="volume_settings_label">Volume</string>
@@ -30,6 +29,13 @@
     <string name="unrecognized_result_code">Unrecognized result code from other activity</string>
     <string name="settings_updated">Settings updated from %1$s</string>
     <string name="title_activity_read_test">ReadTestActivity</string>
-    <string name="hello_world">Hello world!</string>
+    <string name="unrecognized_outcome_reported">Unrecognized outcome reported</string>
+    <string name="success_writing_tag">Successfully wrote %1$d bytes to the tag</string>
+    <string name="no_action_taken_for_tag">No action taken for tag</string>
+    <string name="read_only_tag">Tag is write-protected</string>
+    <string name="tag_size_exceeded">Tag size exceeded</string>
+    <string name="tag_technology_error">Error processing tag</string>
+    <string name="unsupported_tag_technology">Unsupported tag technology</string>
+    <string name="null_message">App reported success but message is null!</string>
 
 </resources>
