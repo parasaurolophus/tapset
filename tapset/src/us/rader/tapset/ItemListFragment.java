@@ -146,7 +146,7 @@ public class ItemListFragment extends ListFragment {
 
         super.onCreate(savedInstanceState);
         setListAdapter(new ArrayAdapter<Item<?>>(getActivity(),
-                android.R.layout.simple_list_item_activated_1,
+                android.R.layout.simple_list_item_1,
                 android.R.id.text1, Item.getSettingsItems()));
 
     }
