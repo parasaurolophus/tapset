@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package us.rader.nfc;
+package us.rader.tapset.nfc;
 
 import java.io.Serializable;
 
@@ -29,7 +29,7 @@ import android.nfc.tech.TagTechnology;
 public enum ProcessTagOutcome implements Serializable {
 
     /**
-     * {@link ForegroundDispatchActivity#processTag(Tag, us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)}
+     * {@link ForegroundDispatchActivity#processTag(Tag, us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask)}
      * reported that it took no action for the given {@link Tag}
      */
     NOTHING_TO_DO,

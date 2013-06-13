@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package us.rader.nfc;
+package us.rader.tapset.nfc;
 
 import java.io.UnsupportedEncodingException;
 

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package us.rader.nfc;
+package us.rader.tapset.nfc;
 
 import java.io.IOException;
 
@@ -40,7 +40,7 @@ import android.util.Log;
  * current {@link NdefMessage} to {@link #createNdefMessage(NdefMessage)}
  * 
  * @see #createNdefMessage(NdefMessage)
- * @see #processTag(Tag, us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)
+ * @see #processTag(Tag, us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask)
  *      )
  * 
  * @author Kirk
@@ -50,13 +50,13 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
     /**
      * If <code>true</code> attempt to mark the {@link Tag} read-only after
      * writing or while formatting in
-     * {@link #processTag(Tag, us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)
+     * {@link #processTag(Tag, us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask)
      * )}
      * 
      * @see #isReadOnlyRequested()
      * @see #setReadonlyRequested(boolean)
      * @see #processTag(Tag,
-     *      us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)
+     *      us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask)
      */
     private boolean readOnlyRequested;
 
@@ -92,7 +92,7 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
      * 
      * @see #setReadonlyRequested(boolean)
      * @see #processTag(Tag,
-     *      us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)
+     *      us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask)
      */
     public final boolean isReadOnlyRequested() {
 
@@ -118,7 +118,7 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
     /**
      * Return the {@link NdefMessage} to write to a {@link Ndef} tag
      * 
-     * {@link #processTag(Tag, us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)}
+     * {@link #processTag(Tag, us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask)}
      * will only attempt to modify the {@link Tag} if this method returns a
      * non-null {@link NdefMessage}
      * 
@@ -130,7 +130,7 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
      *         it
      * 
      * @see #processTag(Tag,
-     *      us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)
+     *      us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask)
      */
     protected abstract NdefMessage createNdefMessage(NdefMessage currentContents);
 
@@ -143,13 +143,13 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
      * 
      * @param task
      *            the
-     *            {@link us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask}
+     *            {@link us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask}
      * 
      * @return the {@link NdefMessage} that was written to the {@link Tag} or
      *         <code>null</code> if an error occurs
      * 
-     * @see us.rader.nfc.NdefReaderActivity#processTag(Tag,
-     *      us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)
+     * @see us.rader.tapset.nfc.NdefReaderActivity#processTag(Tag,
+     *      us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask)
      */
     @Override
     protected final NdefMessage processTag(Tag tag, ProcessTagTask task) {
@@ -199,7 +199,7 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
      * 
      * @param task
      *            the
-     *            {@link us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask}
+     *            {@link us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask}
      * 
      * @return the {@link NdefMessage} that was written
      * 
@@ -282,7 +282,7 @@ public abstract class NdefWriterActivity extends NdefReaderActivity {
      * 
      * @param task
      *            the
-     *            {@link us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask}
+     *            {@link us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask}
      * 
      * @return the {@link NdefMessage} that was written
      * 

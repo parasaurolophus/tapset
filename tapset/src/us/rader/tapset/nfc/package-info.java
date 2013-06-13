@@ -21,17 +21,17 @@
  * {@link android.nfc.NfcAdapter} foreground dispatch mechanism.
  * 
  * <p>
- * Classes that extend {@link us.rader.nfc.ForegroundDispatchActivity} directly or
+ * Classes that extend {@link us.rader.tapset.nfc.ForegroundDispatchActivity} directly or
  * indirectly inherit <code>final</code> implementations of
  * </p>
  * 
  * <ul>
  * 
- * <li> {@link us.rader.nfc.ForegroundDispatchActivity#onPause()}
+ * <li> {@link us.rader.tapset.nfc.ForegroundDispatchActivity#onPause()}
  * 
- * <li> {@link us.rader.nfc.ForegroundDispatchActivity#onResume()}
+ * <li> {@link us.rader.tapset.nfc.ForegroundDispatchActivity#onResume()}
  * 
- * <li> {@link us.rader.nfc.ForegroundDispatchActivity#onNewIntent(android.content.Intent)}
+ * <li> {@link us.rader.tapset.nfc.ForegroundDispatchActivity#onNewIntent(android.content.Intent)}
  * 
  * </ul>
  * 
@@ -43,11 +43,11 @@
  * 
  * <ul>
  * 
- * <li> {@link us.rader.nfc.ForegroundDispatchActivity#createNfcIntentFilters()}
+ * <li> {@link us.rader.tapset.nfc.ForegroundDispatchActivity#createNfcIntentFilters()}
  * 
- * <li> {@link us.rader.nfc.ForegroundDispatchActivity#processTag(android.nfc.Tag, us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)}
+ * <li> {@link us.rader.tapset.nfc.ForegroundDispatchActivity#processTag(android.nfc.Tag, us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask)}
  * 
- * <li> {@link us.rader.nfc.ForegroundDispatchActivity#onTagProcessed(java.lang.Object, ProcessTagOutcome)}
+ * <li> {@link us.rader.tapset.nfc.ForegroundDispatchActivity#onTagProcessed(java.lang.Object, ProcessTagOutcome)}
  * 
  * </ul>
  * 
@@ -57,18 +57,18 @@
  * </p>
  * 
  * <p>
- * Note that the generic parameter type for {@link us.rader.nfc.ForegroundDispatchActivity}
+ * Note that the generic parameter type for {@link us.rader.tapset.nfc.ForegroundDispatchActivity}
  * is declared to be the type returned by
- * {@link us.rader.nfc.ForegroundDispatchActivity#processTag(android.nfc.Tag, us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)}
+ * {@link us.rader.tapset.nfc.ForegroundDispatchActivity#processTag(android.nfc.Tag, us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask)}
  * and expected by
- * {@link us.rader.nfc.ForegroundDispatchActivity#onTagProcessed(java.lang.Object, ProcessTagOutcome)}.
+ * {@link us.rader.tapset.nfc.ForegroundDispatchActivity#onTagProcessed(java.lang.Object, ProcessTagOutcome)}.
  * The former is called on a worker thread when a {@link android.nfc.Tag} is detected while foreground
  * dispatch is enabled and whatever it returns is passed to the latter, on the UI thread
  * </p>
  * 
- * @see us.rader.nfc.ForegroundDispatchActivity
- * @see us.rader.nfc.NdefReaderActivity
- * @see us.rader.nfc.NdefWriterActivity
+ * @see us.rader.tapset.nfc.ForegroundDispatchActivity
+ * @see us.rader.tapset.nfc.NdefReaderActivity
+ * @see us.rader.tapset.nfc.NdefWriterActivity
  */
-package us.rader.nfc;
+package us.rader.tapset.nfc;
 

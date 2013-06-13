@@ -15,8 +15,8 @@
 
 package us.rader.tapset;
 
-import us.rader.nfc.ProcessTagOutcome;
 import us.rader.tapset.item.Item;
+import us.rader.tapset.nfc.ProcessTagOutcome;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;

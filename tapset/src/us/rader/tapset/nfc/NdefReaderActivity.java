@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package us.rader.nfc;
+package us.rader.tapset.nfc;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -46,7 +46,7 @@ public abstract class NdefReaderActivity extends
      * be notified of detection of any {@link Tag}, not just ones that are or
      * can NDEF formatted. Classes that extend this one must take this into
      * account; i.e.
-     * {@link #processTag(Tag, us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)}
+     * {@link #processTag(Tag, us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask)}
      * must check the {@link Tag} to make sure it really can handle the given
      * technology.
      * 
@@ -89,12 +89,12 @@ public abstract class NdefReaderActivity extends
      *            the {@link Tag}
      * 
      * @param task
-     *            {@link us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask}
+     *            {@link us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask}
      * 
      * @return the {@link NdefMessage} or <code>null</code>
      * 
      * @see ForegroundDispatchActivity#processTag(Tag,
-     *      us.rader.nfc.ForegroundDispatchActivity.ProcessTagTask)
+     *      us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask)
      */
     @Override
     protected NdefMessage processTag(Tag tag, ProcessTagTask task) {

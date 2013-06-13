@@ -17,9 +17,9 @@ package us.rader.tapset;
 
 import java.io.Serializable;
 
-import us.rader.nfc.NdefRecordUtilities;
-import us.rader.nfc.NdefWriterActivity;
-import us.rader.nfc.ProcessTagOutcome;
+import us.rader.tapset.nfc.NdefRecordUtilities;
+import us.rader.tapset.nfc.NdefWriterActivity;
+import us.rader.tapset.nfc.ProcessTagOutcome;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
