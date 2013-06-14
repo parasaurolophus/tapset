@@ -29,8 +29,8 @@ import android.widget.RadioButton;
 import android.widget.SeekBar;
 
 /**
- * {@link Item} for audio volumes (ringer volume, notification volume,
- * vibration etc.)
+ * {@link Item} for audio volumes (ringer volume, notification volume, vibration
+ * etc.)
  * 
  * @author Kirk
  * 

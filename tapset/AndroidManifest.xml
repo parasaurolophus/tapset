@@ -64,7 +64,7 @@
         </activity>
 
         <provider
-            android:name="us.rader.provider.file.FileProvider"
+            android:name="us.rader.tapset.provider.FileProvider"
             android:authorities="@string/provider_authority_file"
             android:exported="true"
             android:grantUriPermissions="true"

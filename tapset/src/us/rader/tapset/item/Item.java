@@ -22,9 +22,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import us.rader.tapset.R;
 import us.rader.tapset.ItemDetailFragment;
 import us.rader.tapset.ItemListFragment;
+import us.rader.tapset.R;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
@@ -122,8 +122,7 @@ public abstract class Item<T> {
     }
 
     /**
-     * Return the {@link List} of {@link Item} instances for all device
-     * settings
+     * Return the {@link List} of {@link Item} instances for all device settings
      * 
      * Only valid after a call to {@link #initialize(Context)}
      * 

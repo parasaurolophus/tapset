@@ -104,8 +104,7 @@ public class ItemListFragment extends ListFragment {
     }
 
     /**
-     * Attach this {@link ItemListFragment} to the given
-     * {@link Activity}
+     * Attach this {@link ItemListFragment} to the given {@link Activity}
      * 
      * Note that the given {@link Activity} must implement
      * {@link ItemSelectedListener}, a fact that is checked at run time due to
@@ -146,8 +145,8 @@ public class ItemListFragment extends ListFragment {
 
         super.onCreate(savedInstanceState);
         setListAdapter(new ArrayAdapter<Item<?>>(getActivity(),
-                android.R.layout.simple_list_item_1,
-                android.R.id.text1, Item.getSettingsItems()));
+                android.R.layout.simple_list_item_1, android.R.id.text1,
+                Item.getSettingsItems()));
 
     }
 
@@ -188,8 +187,7 @@ public class ItemListFragment extends ListFragment {
             long id) {
 
         super.onListItemClick(listView, view, position, id);
-        String settingsItemId = Item.getSettingsItems().get(position)
-                .getId();
+        String settingsItemId = Item.getSettingsItems().get(position).getId();
         itemSelectedListener.onItemSelected(settingsItemId);
 
     }

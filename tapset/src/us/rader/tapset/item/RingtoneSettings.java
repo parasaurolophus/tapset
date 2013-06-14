@@ -29,8 +29,8 @@ import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 
 /**
- * {@link Item} for reading and writing {@link AudioManager} ringtone
- * API's in NDEF tags
+ * {@link Item} for reading and writing {@link AudioManager} ringtone API's in
+ * NDEF tags
  * 
  * @author Kirk
  * 

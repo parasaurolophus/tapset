@@ -110,6 +110,21 @@ public class ItemDetailActivity extends FragmentActivity {
     }
 
     /**
+     * Work around bugs in backward-compatibility library
+     */
+    @SuppressLint("NewApi")
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public void setupActionBar() {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            // Show the Up button in the action bar.
+            ActionBar actionBar = getActionBar();
+            actionBar.setDisplayHomeAsUpEnabled(true);
+
+        }
+    }
+
+    /**
      * Notification that the {@link Activity} that was launched to handle a
      * {@link Activity#startActivityForResult(Intent, int)} or
      * {@link Activity#startActivityForResult(Intent, int, Bundle)} request has
@@ -201,20 +216,5 @@ public class ItemDetailActivity extends FragmentActivity {
 
         }
 
-    }
-
-    /**
-     * Work around bugs in backward-compatibility library
-     */
-    @SuppressLint("NewApi")
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public void setupActionBar() {
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            // Show the Up button in the action bar.
-            ActionBar actionBar = getActionBar();
-            actionBar.setDisplayHomeAsUpEnabled(true);
-
-        }
     }
 }

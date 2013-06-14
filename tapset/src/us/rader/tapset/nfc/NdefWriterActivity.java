@@ -40,8 +40,8 @@ import android.util.Log;
  * current {@link NdefMessage} to {@link #createNdefMessage(NdefMessage)}
  * 
  * @see #createNdefMessage(NdefMessage)
- * @see #processTag(Tag, us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask)
- *      )
+ * @see #processTag(Tag,
+ *      us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask) )
  * 
  * @author Kirk
  */

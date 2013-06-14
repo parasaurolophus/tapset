@@ -24,8 +24,8 @@ import android.view.ViewGroup;
 
 /**
  * A fragment representing a single SettingsItem detail screen. This fragment is
- * either contained in a {@link ItemListActivity} in two-pane mode (on
- * tablets) or a {@link ItemDetailActivity} on handsets.
+ * either contained in a {@link ItemListActivity} in two-pane mode (on tablets)
+ * or a {@link ItemDetailActivity} on handsets.
  */
 public class ItemDetailFragment extends Fragment {
 
@@ -38,7 +38,7 @@ public class ItemDetailFragment extends Fragment {
     /**
      * The {@link Item} to use when populating this list item detail UI
      */
-    private Item<?>    settingsItem;
+    private Item<?>            settingsItem;
 
     /**
      * Initialize this instance
@@ -56,8 +56,8 @@ public class ItemDetailFragment extends Fragment {
 
         if (getArguments().containsKey(ARG_ITEM_ID)) {
 
-            settingsItem = Item.getSettingsItem(getArguments()
-                    .getString(ARG_ITEM_ID));
+            settingsItem = Item.getSettingsItem(getArguments().getString(
+                    ARG_ITEM_ID));
 
         }
 
