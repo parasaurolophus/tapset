@@ -19,4 +19,4 @@
  * Simple {@link android.content.ContentProvider} that can be used to share
  * the contents of a file without using the deprecated MODE_WORLD_READABLE
  */
-package us.rader.provider.file;
+package us.rader.tapset.provider;

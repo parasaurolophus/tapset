@@ -15,7 +15,7 @@
 
  */
 
-package us.rader.provider.file;
+package us.rader.tapset.provider;
 
 import java.io.File;
 import java.io.FileNotFoundException;

@@ -20,7 +20,7 @@ import java.io.FileOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import us.rader.provider.file.FileProvider;
+import us.rader.tapset.provider.FileProvider;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
