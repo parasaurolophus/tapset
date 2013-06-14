@@ -15,11 +15,7 @@
 
 package us.rader.tapset;
 
-import java.io.Serializable;
-
-import us.rader.tapset.nfc.NdefRecordUtilities;
 import us.rader.tapset.nfc.NdefWriterActivity;
-import us.rader.tapset.nfc.ProcessTagOutcome;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -42,27 +38,16 @@ import android.view.MenuItem;
 public final class WriteTagActivity extends NdefWriterActivity {
 
     /**
-     * The {@link Intent#putExtra(String, Serializable)} key for the
-     * {@link ProcessTagOutcome} parameter to
-     * {@link #onTagProcessed(NdefMessage, ProcessTagOutcome)}
+     * Foreground dispatch request code
      */
-    public static final String               EXTRA_OUTCOME = "us.rader.tapset.outcome"; //$NON-NLS-1$
+    public static final int REQUEST_WRITE_TAG = 1;
 
     /**
-     * The {@link Intent#getParcelableExtra(String)} key used to convey the
-     * scanned {@link NdefMessage} back to the {@link Activity} that started
-     * this one
+     * @see #REQUEST_WRITE_TAG
      */
-    public static final String               EXTRA_RESULT  = "us.rader.tapset.result"; //$NON-NLS-1$
+    public WriteTagActivity() {
 
-    /**
-     * Cached reference to the {@link NdefRecordUtilities} singleton
-     */
-    private static final NdefRecordUtilities ndefRecordUtilities;
-
-    static {
-
-        ndefRecordUtilities = NdefRecordUtilities.getInstance();
+        super(REQUEST_WRITE_TAG);
 
     }
 
@@ -118,8 +103,10 @@ public final class WriteTagActivity extends NdefWriterActivity {
 
         Intent intent = getIntent();
         Uri uri = intent.getData();
-        NdefRecord record = ndefRecordUtilities.createUri(uri);
-        return new NdefMessage(new NdefRecord[] { record });
+        NdefRecord uriRecord = NdefWriterActivity.createUri(uri);
+        NdefRecord aaRecord = NdefWriterActivity.createAar(getClass()
+                .getPackage());
+        return new NdefMessage(new NdefRecord[] { uriRecord, aaRecord });
 
     }
 
@@ -136,29 +123,6 @@ public final class WriteTagActivity extends NdefWriterActivity {
         setContentView(R.layout.activity_write_tag);
         // Show the Up button in the action bar.
         setupActionBar();
-
-    }
-
-    /**
-     * Handle notification that a {@link NdefMessage} has been detected
-     * 
-     * @param result
-     *            the {@link NdefMessage}
-     */
-    @Override
-    protected void onTagProcessed(NdefMessage result, ProcessTagOutcome outcome) {
-
-        Intent intent = new Intent();
-
-        if (result != null) {
-
-            intent.putExtra(EXTRA_RESULT, result);
-
-        }
-
-        intent.putExtra(EXTRA_OUTCOME, outcome);
-        setResult(RESULT_OK, intent);
-        finish();
 
     }
 

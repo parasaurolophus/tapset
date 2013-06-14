@@ -16,7 +16,7 @@
 package us.rader.tapset;
 
 import us.rader.tapset.item.Item;
-import us.rader.tapset.nfc.ProcessTagOutcome;
+import us.rader.tapset.nfc.NdefReaderActivity;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -100,78 +100,43 @@ public class ItemListActivity extends FragmentActivity implements
      * @param activity
      *            the {@link Activity} that received the result
      * 
+     * @param resultCode
+     *            the result code passed by {@link WriteTagActivity} using
+     *            {@link Activity#setResult(int)} or
+     *            {@link Activity#setResult(int, Intent)}
+     * 
      * @param resultIntent
      *            the result {@link Intent} passed by the
      *            {@link WriteTagActivity} using
-     *            {@link Activity#setResult(int, Intent)}
+     *            {@link Activity#setResult(int, Intent)} (may be
+     *            <code>null</code>)
      */
-    public static void handleWriteTagResult(Activity activity,
+    public static void handleWriteTagResult(Activity activity, int resultCode,
             Intent resultIntent) {
 
-        ProcessTagOutcome outcome = (ProcessTagOutcome) resultIntent
-                .getSerializableExtra(WriteTagActivity.EXTRA_OUTCOME);
-        NdefMessage message = resultIntent
-                .getParcelableExtra(WriteTagActivity.EXTRA_RESULT);
+        if (resultCode == RESULT_CANCELED) {
 
-        switch (outcome) {
-
-            case NOTHING_TO_DO:
-
-                Toast.makeText(activity, R.string.no_action_taken_for_tag,
-                        Toast.LENGTH_LONG).show();
-                return;
-
-            case READ_ONLY_TAG:
-
-                Toast.makeText(activity, R.string.read_only_tag,
-                        Toast.LENGTH_LONG).show();
-                return;
-
-            case SUCCESSFUL_READ:
-            case SUCCESSFUL_WRITE:
-
-                break;
-
-            case TAG_SIZE_EXCEEDED:
-
-                Toast.makeText(activity, R.string.tag_size_exceeded,
-                        Toast.LENGTH_LONG).show();
-                return;
-
-            case TECHNOLOGY_ERROR:
-
-                Toast.makeText(activity, R.string.tag_technology_error,
-                        Toast.LENGTH_LONG).show();
-                return;
-
-            case UNSUPPORTED_TAG:
-
-                Toast.makeText(activity, R.string.unsupported_tag_technology,
-                        Toast.LENGTH_LONG).show();
-                return;
-
-            default:
-
-                Toast.makeText(activity,
-                        R.string.unrecognized_outcome_reported,
-                        Toast.LENGTH_LONG).show();
-                return;
+            Toast.makeText(activity, R.string.cancelled, Toast.LENGTH_SHORT)
+                    .show();
+            return;
 
         }
+
+        NdefMessage message = resultIntent
+                .getParcelableExtra(NdefReaderActivity.EXTRA_RESULT);
 
         if (message == null) {
 
             Toast.makeText(activity, R.string.null_message, Toast.LENGTH_LONG)
                     .show();
-
-        } else {
-
-            byte[] bytes = message.toByteArray();
-            String text = activity.getString(R.string.success_writing_tag,
-                    bytes.length);
-            Toast.makeText(activity, text, Toast.LENGTH_LONG).show();
+            return;
 
         }
+
+        byte[] bytes = message.toByteArray();
+        String text = activity.getString(R.string.success_writing_tag,
+                bytes.length);
+        Toast.makeText(activity, text, Toast.LENGTH_LONG).show();
 
     }
 
@@ -399,7 +364,7 @@ public class ItemListActivity extends FragmentActivity implements
 
                 case REQUEST_CODE_WRITE_TAG:
 
-                    handleWriteTagResult(this, resultIntent);
+                    handleWriteTagResult(this, requestCode, resultIntent);
                     break;
 
                 default:

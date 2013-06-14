@@ -159,7 +159,8 @@ public class ItemDetailActivity extends FragmentActivity {
 
             case ItemListActivity.REQUEST_CODE_WRITE_TAG:
 
-                ItemListActivity.handleWriteTagResult(this, resultIntent);
+                ItemListActivity.handleWriteTagResult(this, resultCode,
+                        resultIntent);
                 break;
 
             case IntentIntegrator.REQUEST_CODE:

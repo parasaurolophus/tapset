@@ -15,11 +15,13 @@
 
 package us.rader.tapset.nfc;
 
-import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
-import android.app.Activity;
-import android.nfc.FormatException;
+import us.rader.tapset.R;
+import android.content.Intent;
+import android.net.Uri;
 import android.nfc.NdefMessage;
+import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.Ndef;
@@ -27,303 +29,453 @@ import android.nfc.tech.NdefFormatable;
 import android.util.Log;
 
 /**
- * Super class of any {@link Activity} that prompts the user to scan a NFC tag
- * so as to write a {@link NdefMessage} to it
- * 
- * Since writing a {@link NdefMessage} involves the use of the
- * {@link NfcAdapter} foreground dispatch mechanism in a way that is almost
- * identical to that which is used to read one, this class extends
- * {@link NdefReaderActivity}. This isn't mere "inheritance for implementation,"
- * (though objections along such lines are frequently more a matter of point of
- * view than of objective fact -- pun intended) since this presents a paradigm
- * in which the contents of a {@link Tag} can be "modified" by passing the
- * current {@link NdefMessage} to {@link #createNdefMessage(NdefMessage)}
- * 
- * @see #createNdefMessage(NdefMessage)
- * @see #processTag(Tag,
- *      us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask) )
+ * {@link ForegroundDispatchActivity} that writes a {@link NdefMessage} to a
+ * {@link Tag}
  * 
  * @author Kirk
  */
 public abstract class NdefWriterActivity extends NdefReaderActivity {
 
     /**
-     * If <code>true</code> attempt to mark the {@link Tag} read-only after
-     * writing or while formatting in
-     * {@link #processTag(Tag, us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask)
-     * )}
+     * Create a AAR {@link NdefRecord} for the given {@link Package}
      * 
-     * @see #isReadOnlyRequested()
-     * @see #setReadonlyRequested(boolean)
-     * @see #processTag(Tag,
-     *      us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask)
+     * @param pkg
+     *            the {@link Package}
+     * 
+     * @return AAR {@link NdefRecord}
      */
-    private boolean readOnlyRequested;
+    public static NdefRecord createAar(Package pkg) {
 
-    /**
-     * Initialize {@link #readOnlyRequested} to <code>false</code>
-     */
-    public NdefWriterActivity() {
-
-        this(false);
+        return createAar(pkg.getName());
 
     }
 
     /**
-     * Initialize {@link #readOnlyRequested} to the given value
+     * Create a AAR {@link NdefRecord} for the given {@link Package} name
      * 
-     * @param readOnlyRequested
-     *            the initial value for {@link #readOnlyRequested}
+     * Even though AAR records will only be used by devices running Ice Cream
+     * Sandwich or later, this method uses API's available since Gingerbread MR1
+     * to create them. This allows a single version of an app to run on older
+     * devices but still include AAR records in any tags they write in case
+     * those tags are later read by devices running Ice Cream Sandwich or later
      * 
-     * @see #readOnlyRequested
-     * @see #isReadOnlyRequested()
-     * @see #setReadonlyRequested(boolean)
+     * @param pkg
+     *            the {@link Package} name
+     * 
+     * @return AAR {@link NdefRecord}
      */
-    public NdefWriterActivity(boolean readOnlyRequested) {
-
-        this.readOnlyRequested = readOnlyRequested;
-
-    }
-
-    /**
-     * Return the current value of {@link #readOnlyRequested}
-     * 
-     * @return {@link #readOnlyRequested}
-     * 
-     * @see #setReadonlyRequested(boolean)
-     * @see #processTag(Tag,
-     *      us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask)
-     */
-    public final boolean isReadOnlyRequested() {
-
-        return readOnlyRequested;
-
-    }
-
-    /**
-     * Set {@link #readOnlyRequested} to the given value
-     * 
-     * @param readOnlyRequested
-     *            the new value for {@link #readOnlyRequested}
-     * 
-     * @see #readOnlyRequested
-     * @see #isReadOnlyRequested()
-     */
-    public final void setReadonlyRequested(boolean readOnlyRequested) {
-
-        this.readOnlyRequested = readOnlyRequested;
-
-    }
-
-    /**
-     * Return the {@link NdefMessage} to write to a {@link Ndef} tag
-     * 
-     * {@link #processTag(Tag, us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask)}
-     * will only attempt to modify the {@link Tag} if this method returns a
-     * non-null {@link NdefMessage}
-     * 
-     * @param currentContents
-     *            the {@link NdefMessage} representing the current contents of a
-     *            {@link Tag} or <code>null</code> if {@link Tag} is empty
-     * 
-     * @return the given {@link NdefMessage} or a new one with which to replace
-     *         it
-     * 
-     * @see #processTag(Tag,
-     *      us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask)
-     */
-    protected abstract NdefMessage createNdefMessage(NdefMessage currentContents);
-
-    /**
-     * Write the result of calling {@link #createNdefMessage(NdefMessage)} to
-     * the given {@link Tag}
-     * 
-     * @param tag
-     *            the {@link Tag}
-     * 
-     * @param task
-     *            the
-     *            {@link us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask}
-     * 
-     * @return the {@link NdefMessage} that was written to the {@link Tag} or
-     *         <code>null</code> if an error occurs
-     * 
-     * @see us.rader.tapset.nfc.NdefReaderActivity#processTag(Tag,
-     *      us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask)
-     */
-    @Override
-    protected final NdefMessage processTag(Tag tag, ProcessTagTask task) {
-
-        if (tag == null) {
-
-            task.setOutcome(ProcessTagOutcome.NOTHING_TO_DO);
-            return null;
-
-        }
+    public static NdefRecord createAar(String pkg) {
 
         try {
+
+            byte[] type = "android.com:pkg".getBytes("US-ASCII"); //$NON-NLS-1$//$NON-NLS-2$
+            byte[] payload = pkg.getBytes("US-ASCII"); //$NON-NLS-1$
+            return new NdefRecord(NdefRecord.TNF_EXTERNAL_TYPE, type, null,
+                    payload);
+
+        } catch (UnsupportedEncodingException e) {
+
+            Log.e(NdefWriterActivity.class.getName(), "createAar", e); //$NON-NLS-1$
+            throw new IllegalArgumentException(e);
+
+        }
+    }
+
+    /**
+     * Return MIME {@link NdefRecord}
+     * 
+     * @param type
+     *            the MIME type string
+     * 
+     * @param payload
+     *            the payload bytes
+     * 
+     * @return MIME {@link NdefRecord}
+     * 
+     * @see #createMime(String, String, String)
+     */
+    public static NdefRecord createMime(String type, byte[] payload) {
+
+        try {
+
+            byte[] bytes = type.getBytes("US-ASCII"); //$NON-NLS-1$
+            return new NdefRecord(NdefRecord.TNF_MIME_MEDIA, bytes, null,
+                    payload);
+
+        } catch (UnsupportedEncodingException e) {
+
+            Log.e(NdefWriterActivity.class.getName(), "createMime", e); //$NON-NLS-1$
+            throw new IllegalArgumentException(e);
+
+        }
+    }
+
+    /**
+     * Return MIME {@link NdefRecord}
+     * 
+     * @param type
+     *            the MIME type string
+     * 
+     * @param payload
+     *            the payload string
+     * 
+     * @param encoding
+     *            the encoding for the payload (e.g. "US-ASCII", "UTF-8" etc.)
+     * 
+     * @return MIME {@link NdefRecord}
+     * 
+     * @see #createMime(String, byte[])
+     */
+    public static NdefRecord createMime(String type, String payload,
+            String encoding) {
+
+        try {
+
+            byte[] bytes = payload.getBytes(encoding);
+            return createMime(type, bytes);
+
+        } catch (UnsupportedEncodingException e) {
+
+            Log.e(NdefWriterActivity.class.getName(), "createMime", e); //$NON-NLS-1$
+            throw new IllegalArgumentException(e);
+
+        }
+    }
+
+    /**
+     * Create a "T" record with language code "en" and the given
+     * <code>text</code>
+     * 
+     * @param text
+     *            the text string
+     * 
+     * @return "T" {@link NdefRecord}
+     * 
+     * @see #createText(String, String)
+     */
+    public static NdefRecord createText(String text) {
+
+        return createText("en", text); //$NON-NLS-1$
+
+    }
+
+    /**
+     * Return a "T" {@link NdefRecord}
+     * 
+     * @param language
+     *            the language code
+     * 
+     * @param text
+     *            the text string
+     * 
+     * @return "T" {@link NdefRecord}
+     */
+    public static NdefRecord createText(String language, String text) {
+
+        try {
+
+            byte[] languageBytes = language.getBytes("UTF-8"); //$NON-NLS-1$
+            byte[] textBytes = text.getBytes("UTF-8"); //$NON-NLS-1$
+            byte[] payload = new byte[languageBytes.length + textBytes.length
+                    + 1];
+            payload[0] = (byte) languageBytes.length;
+            System.arraycopy(languageBytes, 0, payload, 1, languageBytes.length);
+            System.arraycopy(textBytes, 0, payload, languageBytes.length + 1,
+                    textBytes.length);
+            return new NdefRecord(NdefRecord.TNF_WELL_KNOWN,
+                    NdefRecord.RTD_TEXT, null, payload);
+
+        } catch (UnsupportedEncodingException e) {
+
+            Log.e(NdefWriterActivity.class.getName(), "createText", e); //$NON-NLS-1$
+            throw new IllegalArgumentException(e);
+
+        }
+    }
+
+    /**
+     * Create a "U" {@link NdefRecord}
+     * 
+     * @param uri
+     *            the URI string
+     * 
+     * @return "U" {@link NdefRecord}
+     * 
+     * @see #createUri(Uri)
+     */
+    public static NdefRecord createUri(String uri) {
+
+        try {
+
+            String prefix = ""; //$NON-NLS-1$
+            String suffix = uri;
+            int code = 0;
+
+            for (int index = 1; index < WELL_KNOWN_URI_PREFIX.length; ++index) {
+
+                if (uri.startsWith(WELL_KNOWN_URI_PREFIX[index])) {
+
+                    prefix = WELL_KNOWN_URI_PREFIX[index];
+                    suffix = uri.substring(prefix.length());
+                    code = index;
+                    break;
+
+                }
+
+            }
+
+            byte[] bytes = suffix.getBytes("US-ASCII"); //$NON-NLS-1$
+            byte[] payload = new byte[bytes.length + 1];
+            payload[0] = (byte) code;
+            System.arraycopy(bytes, 0, payload, 1, bytes.length);
+            return new NdefRecord(NdefRecord.TNF_WELL_KNOWN,
+                    NdefRecord.RTD_URI, null, payload);
+
+        } catch (UnsupportedEncodingException e) {
+
+            Log.e(NdefWriterActivity.class.getName(), "createUri", e); //$NON-NLS-1$
+            throw new IllegalArgumentException(e);
+
+        }
+    }
+
+    /**
+     * Create a "U" {@link NdefRecord}
+     * 
+     * @param uri
+     *            the {@link Uri}
+     * 
+     * @return "U" {@link NdefRecord}
+     * 
+     * @see #createUri(String)
+     */
+    public static NdefRecord createUri(Uri uri) {
+
+        return createUri(uri.toString());
+
+    }
+
+    /**
+     * If <code>true</code>, write-protect a {@link Tag} after writing to it.
+     * Otherwise, leave the {@link Tag} writable
+     */
+    private boolean writeProtectRequested;
+
+    /**
+     * Pass required parameter to super class constructor
+     * 
+     * @param requestCode
+     *            the foreground dispatch request code to pass to
+     *            {@link NdefReaderActivity#NdefReaderActivity(int)}
+     */
+    protected NdefWriterActivity(int requestCode) {
+
+        super(requestCode);
+        writeProtectRequested = false;
+
+    }
+
+    /**
+     * Return the current value of {@link #writeProtectRequested}
+     * 
+     * @return {@link #writeProtectRequested}
+     */
+    public final boolean isWriteProtectRequested() {
+
+        return writeProtectRequested;
+
+    }
+
+    /**
+     * Update the value of {@link #writeProtectRequested}
+     * 
+     * @param writeProtectRequested
+     *            new value for {@link #writeProtectRequested}
+     */
+    public final void setWriteProtectRequested(boolean writeProtectRequested) {
+
+        this.writeProtectRequested = writeProtectRequested;
+
+    }
+
+    /**
+     * Return the {@link NdefMessage} to write to the tag
+     * 
+     * @param currentMessage
+     *            the current contents of the tag, or <code>null</code> if the
+     *            tag is empty
+     * 
+     * @return the {@link NdefMessage} to write or <code>null</code> to indicate
+     *         that the tag should be left as-is
+     */
+    protected abstract NdefMessage createNdefMessage(NdefMessage currentMessage);
+
+    /**
+     * Write the value returned by {@link #createNdefMessage(NdefMessage)} to
+     * the given {@link Tag}
+     * 
+     * @param intent
+     *            the {@link Intent}
+     * 
+     * @return the {@link NdefMessage} that was written to the {@link Tag} or
+     *         <code>null</code>
+     * 
+     * @see NdefReaderActivity#processTag(Intent)
+     */
+    @Override
+    protected final NdefMessage processTag(Intent intent) {
+
+        try {
+
+            Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
 
             Ndef ndef = Ndef.get(tag);
 
-            if (ndef == null) {
+            if (ndef != null) {
 
-                NdefFormatable formatable = NdefFormatable.get(tag);
-
-                if (formatable == null) {
-
-                    return null;
-                }
-
-                return processNdefFormatable(formatable, task);
+                return writeNdef(ndef);
 
             }
 
-            return processNdef(ndef, task);
+            NdefFormatable formatable = NdefFormatable.get(tag);
+
+            if (formatable != null) {
+
+                return writeFormatable(formatable);
+
+            }
+
+            toast(getString(R.string.incompatible_tag));
+            return null;
 
         } catch (Exception e) {
 
-            Log.e(NdefWriterActivity.class.getName(), "error processing tag", e); //$NON-NLS-1$
-            task.setOutcome(ProcessTagOutcome.TECHNOLOGY_ERROR);
+            Log.e(NdefWriterActivity.class.getName(), "processTag", e); //$NON-NLS-1$
             return null;
 
         }
     }
 
     /**
-     * Write the result of passing the given {@link Ndef} instance to
-     * {@link #createNdefMessage(NdefMessage)} to the tag using that same
-     * {@link Ndef}
-     * 
-     * @param ndef
-     *            the {@Link Ndef} instance
-     * 
-     * @param task
-     *            the
-     *            {@link us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask}
-     * 
-     * @return the {@link NdefMessage} that was written
-     * 
-     * @throws IOException
-     *             if an I/O error occurs
-     * 
-     * @throws FormatException
-     *             if a NDEF format error occurs
-     */
-    private NdefMessage processNdef(Ndef ndef, ProcessTagTask task)
-            throws IOException, FormatException {
-
-        NdefMessage currentContents = ndef.getCachedNdefMessage();
-        NdefMessage newMessage = createNdefMessage(currentContents);
-
-        if (newMessage == null) {
-
-            if (currentContents == null) {
-
-                Log.e(NdefWriterActivity.class.getName(),
-                        "cached NDEF message is null"); //$NON-NLS-1$
-                task.setOutcome(ProcessTagOutcome.UNSUPPORTED_TAG);
-
-            } else {
-
-                task.setOutcome(ProcessTagOutcome.SUCCESSFUL_READ);
-
-            }
-
-            return currentContents;
-
-        }
-
-        if (!ndef.isWritable()) {
-
-            task.setOutcome(ProcessTagOutcome.READ_ONLY_TAG);
-            return currentContents;
-
-        }
-
-        byte[] bytes = newMessage.toByteArray();
-        int maxSize = ndef.getMaxSize();
-
-        if (bytes.length > maxSize) {
-
-            task.setOutcome(ProcessTagOutcome.TAG_SIZE_EXCEEDED);
-            return currentContents;
-
-        }
-
-        ndef.connect();
-
-        try {
-
-            ndef.writeNdefMessage(newMessage);
-
-            if (readOnlyRequested) {
-
-                ndef.makeReadOnly();
-
-            }
-
-            task.setOutcome(ProcessTagOutcome.SUCCESSFUL_WRITE);
-            return newMessage;
-
-        } finally {
-
-            ndef.close();
-
-        }
-    }
-
-    /**
-     * Write the result of passing <code>null</code> to
-     * {@link #createNdefMessage(NdefMessage)} to the given
-     * {@link NdefFormatable}
+     * Write the result of calling {@link #createNdefMessage(NdefMessage)} to
+     * the given {@link NdefFormatable} tag
      * 
      * @param formatable
-     *            the {@Link NdefFormatable} instance
+     *            the {@link NdefFormatable} tag
      * 
-     * @param task
-     *            the
-     *            {@link us.rader.tapset.nfc.ForegroundDispatchActivity.ProcessTagTask}
-     * 
-     * @return the {@link NdefMessage} that was written
-     * 
-     * @throws IOException
-     *             if an I/O error occurs
-     * 
-     * @throws FormatException
-     *             if a NDEF format error occurs
+     * @return the {@link NdefMessage} written to the tag
      */
-    private NdefMessage processNdefFormatable(NdefFormatable formatable,
-            ProcessTagTask task) throws IOException, FormatException {
-
-        formatable.connect();
+    private NdefMessage writeFormatable(NdefFormatable formatable) {
 
         try {
 
-            NdefMessage message = createNdefMessage(null);
+            NdefMessage ndefMessage = createNdefMessage(null);
 
-            if (message == null) {
+            if (ndefMessage == null) {
 
-                task.setOutcome(ProcessTagOutcome.NOTHING_TO_DO);
                 return null;
 
             }
 
-            if (readOnlyRequested) {
+            formatable.connect();
 
-                formatable.formatReadOnly(message);
+            try {
 
-            } else {
+                if (writeProtectRequested) {
 
-                formatable.format(message);
+                    formatable.formatReadOnly(ndefMessage);
+
+                } else {
+
+                    formatable.format(ndefMessage);
+
+                }
+
+                return ndefMessage;
+
+            } finally {
+
+                formatable.close();
 
             }
 
-            task.setOutcome(ProcessTagOutcome.SUCCESSFUL_WRITE);
-            return message;
+        } catch (Exception e) {
 
-        } finally {
+            Log.e(NdefWriterActivity.class.getName(), "writeFormatable", e); //$NON-NLS-1$
+            toast(getString(R.string.error_formatting_tag));
+            return null;
 
-            formatable.close();
+        }
+    }
+
+    /**
+     * Write the result of calling {@link #createNdefMessage(NdefMessage)} to
+     * the given {@link Ndef} formatted tag
+     * 
+     * @param ndef
+     *            the {@link Ndef} tag
+     * 
+     * @return the {@link NdefMessage} written to the tag
+     */
+    private NdefMessage writeNdef(Ndef ndef) {
+
+        try {
+
+            if (!ndef.isWritable()) {
+
+                toast(getString(R.string.read_only_tag));
+                return null;
+
+            }
+
+            NdefMessage ndefMessage = createNdefMessage(ndef
+                    .getCachedNdefMessage());
+
+            if (ndefMessage == null) {
+
+                return null;
+
+            }
+
+            byte[] bytes = ndefMessage.toByteArray();
+            int max = ndef.getMaxSize();
+
+            if (bytes.length > max) {
+
+                toast(getString(R.string.tag_size_exceeded, bytes.length, max));
+                return null;
+
+            }
+
+            ndef.connect();
+
+            try {
+
+                ndef.writeNdefMessage(ndefMessage);
+
+                if (writeProtectRequested) {
+
+                    if (!ndef.makeReadOnly()) {
+
+                        toast(getString(R.string.write_protect_failed));
+                        return null;
+
+                    }
+                }
+
+                return ndefMessage;
+
+            } finally {
+
+                ndef.close();
+
+            }
+
+        } catch (Exception e) {
+
+            Log.e(NdefWriterActivity.class.getName(), "writeNdef", e); //$NON-NLS-1$
+            toast(getString(R.string.error_writing_tag));
+            return null;
 
         }
     }
