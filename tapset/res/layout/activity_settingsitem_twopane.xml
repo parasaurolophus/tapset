@@ -6,6 +6,7 @@
     android:layout_marginRight="16dp"
     android:baselineAligned="false"
     android:orientation="horizontal"
+    android:padding="@dimen/root_padding"
     android:showDividers="middle"
     tools:context=".ItemListActivity" >
 
